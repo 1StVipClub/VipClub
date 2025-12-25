@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعدادات الحساب - VipClub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { 
+            --primary: #6366f1; 
+            --success: #10b981;
+            --danger: #ef4444; 
+            --dark: #1e293b; 
+            --bg: #f1f5f9; 
+            --light-red: #ff5f5f; 
+        }
+        
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: var(--dark); padding-bottom: 50px; direction: rtl; }
+        .header { background: #fff; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
+        .back-btn { text-decoration: none; color: var(--dark); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; }
+        .container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
+
+        .settings-card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .card-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; color: var(--primary); }
+
+        .form-group { margin-bottom: 18px; text-align: right; }
+        label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; color: #475569; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-family: inherit; font-size: 0.9rem; text-align: right; }
+        textarea { resize: vertical; min-height: 80px; }
+        input:disabled { background: #f8f9fa; color: #94a3b8; cursor: not-allowed; border: 1px dashed #cbd5e1; }
+        
+        .row { display: flex; gap: 15px; flex-wrap: wrap; }
+        .row .form-group { flex: 1; min-width: 140px; }
+
+        .helper-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .helper-text-red {
+            font-size: 0.85rem;
+            color: var(--light-red);
+            font-weight: 600;
+        }
+
+        .info-icon {
+            color: var(--light-red);
+            cursor: pointer;
+            position: relative;
+            font-size: 0.9rem;
+        }
+
+        .info-icon:hover::after {
+            content: "وفقاً لسياسة الموقع يحق لكل مستخدم تغيير اسمه المستعار مرة واحدة فقط كل 3 شهور (90 يوم)";
+            position: absolute;
+            bottom: 125%;
+            right: 50%;
+            transform: translateX(50%);
+            background: #334155;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            white-space: normal;
+            width: 220px;
+            z-index: 10;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; box-sizing: border-box; }
+        .btn-save { background: var(--primary); color: white; }
+        .btn-chat { background: #1e293b; color: white; margin-top: 40px; }
+        .btn-delete { background: #fee2e2; color: var(--danger); margin-top: 10px; border: 1px solid #fecaca; }
+
+        #customAlert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 15px 30px; border-radius: 12px; color: white; display: none; z-index: 9999; font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.2); animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { top: -50px; opacity: 0; } to { top: 20px; opacity: 1; } }
+
+        /* ستايل مخصص لتاريخ الإنشاء */
+        .join-date-box {
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 10px;
+            border-right: 4px solid var(--success);
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+<div id="customAlert"></div>
+
+<div class="header">
+    <a href="home.html" class="back-btn"><i class="fas fa-arrow-right"></i></a>
+    <h2 style="margin:0; font-size: 1.2rem;">إعدادات الحساب</h2>
+</div>
+
+<div class="container">
+    <div class="settings-card">
+        <div class="card-title"><i class="fas fa-user-shield"></i> الأمان والبيانات الشخصية</div>
+        
+        <div class="join-date-box">
+            <i class="fas fa-calendar-alt"></i> عضو منذ: <span id="display_join_date" style="font-weight: bold; color: var(--dark);">---</span>
+        </div>
+
+        <div class="form-group">
+            <label>الاسم المستعار (Nickname)</label>
+            <input type="text" id="edit_nickname" placeholder="أدخل اسمك المستعار الجديد">
+            <div class="helper-container">
+                <span id="nickname_hint" class="helper-text-red">يسمح بالتغيير مرة كل 90 يوم.</span>
+                <div class="info-icon"><i class="fas fa-question-circle"></i></div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label>البريد الإلكتروني الأساسي</label>
+                <input type="email" id="edit_email">
+            </div>
+            <div class="form-group">
+                <label>بريد إلكتروني إضافي</label>
+                <input type="email" id="edit_email2">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label>رقم الهاتف الأساسي</label>
+                <input type="text" id="edit_phone">
+            </div>
+            <div class="form-group">
+                <label>رقم هاتف إضافي</label>
+                <input type="text" id="edit_phone2">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label>الجنس</label>
+                <select id="edit_gender">
+                    <option value="">تحديد...</option>
+                    <option value="ذكر">ذكر</option>
+                    <option value="أنثى">أنثى</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>العمر</label>
+                <input type="number" id="edit_age">
+            </div>
+            <div class="form-group">
+                <label>الدولة / المنطقة</label>
+                <input type="text" id="edit_country">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>نبذة مختصرة عنك</label>
+            <textarea id="edit_bio"></textarea>
+        </div>
+
+        <button class="btn btn-save" onclick="saveSettings()">
+            <i class="fas fa-save"></i> حفظ التعديلات
+        </button>
+    </div>
+
+    <a href="chatwithadmin2.html" class="btn btn-chat">
+        <i class="fas fa-headset"></i> الدعم الفني والمحادثة المباشرة
+    </a>
+
+    <button class="btn btn-delete" onclick="deleteAccount()">
+        <i class="fas fa-user-slash"></i> حذف الحساب نهائياً
+    </button>
+</div>
+
+<script>
+    function getData(key) { return JSON.parse(localStorage.getItem(key)) || []; }
+    function setData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+
+    let sessionUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!sessionUser) window.location.replace('Login.html');
+
+    function init() {
+        let users = getData('app_users');
+        let user = users.find(u => u.id === sessionUser.id);
+        if (!user) return;
+
+        // تعبئة البيانات
+        document.getElementById('edit_nickname').value = user.nickname || user.username || "";
+        document.getElementById('edit_email').value = user.email || "";
+        document.getElementById('edit_email2').value = user.email2 || "";
+        document.getElementById('edit_phone').value = user.phone || "";
+        document.getElementById('edit_phone2').value = user.phone2 || "";
+        document.getElementById('edit_gender').value = user.gender || "";
+        document.getElementById('edit_age').value = user.age || "";
+        document.getElementById('edit_country').value = user.country || "";
+        document.getElementById('edit_bio').value = user.bio || "";
+
+        // عرض تاريخ إنشاء الحساب بتنسيق جميل
+        if(user.createdAt) {
+            const date = new Date(user.createdAt);
+            document.getElementById('display_join_date').innerText = date.toLocaleDateString('ar-EG', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        } else {
+            document.getElementById('display_join_date').innerText = "تاريخ غير مسجل";
+        }
+
+        // فحص صلاحية تغيير الاسم (90 يوم)
+        if (user.lastNicknameChange) {
+            let daysPassed = (Date.now() - new Date(user.lastNicknameChange).getTime()) / (1000 * 60 * 60 * 24);
+            if (daysPassed < 90) {
+                document.getElementById('edit_nickname').disabled = true;
+                document.getElementById('nickname_hint').innerText = `باقي ${Math.ceil(90 - daysPassed)} يوم لتغيير الاسم.`;
+            } else {
+                document.getElementById('nickname_hint').innerText = "يمكنك تغيير اسمك الآن.";
+                document.getElementById('nickname_hint').style.color = "var(--success)";
+            }
+        }
+    }
+
+    function showMsg(text, type) {
+        let alertBox = document.getElementById('customAlert');
+        alertBox.innerText = text;
+        alertBox.style.background = type === 'success' ? 'var(--success)' : 'var(--danger)';
+        alertBox.style.display = 'block';
+        setTimeout(() => { alertBox.style.display = 'none'; }, 3000);
+    }
+
+    function saveSettings() {
+        let users = getData('app_users');
+        let userIdx = users.findIndex(u => u.id === sessionUser.id);
+        let user = users[userIdx];
+        
+        let newNick = document.getElementById('edit_nickname').value.trim();
+        let newEmail = document.getElementById('edit_email').value.trim();
+        let newPhone = document.getElementById('edit_phone').value.trim();
+
+        if (!newNick || !newEmail || !newPhone) return showMsg("الحقول الأساسية مطلوبة", "error");
+
+        // 1. التحقق من تكرار الاسم
+        if (newNick.toLowerCase() !== (user.nickname || user.username || "").toLowerCase()) {
+            let nameExists = users.some(u => 
+                u.id !== user.id && 
+                ((u.nickname || "").toLowerCase() === newNick.toLowerCase() || 
+                 (u.username || "").toLowerCase() === newNick.toLowerCase())
+            );
+            if (nameExists) return showMsg("هذا الاسم المستعار مستخدم بالفعل!", "error");
+            
+            user.nickname = newNick;
+            user.lastNicknameChange = new Date().toISOString();
+        }
+
+        // 2. التحقق من تكرار البريد
+        if (newEmail !== user.email) {
+            let emailExists = users.some(u => u.id !== user.id && u.email === newEmail);
+            if (emailExists) return showMsg("هذا البريد الإلكتروني مسجل لحساب آخر!", "error");
+            user.email = newEmail;
+        }
+
+        // 3. التحقق من تكرار الهاتف
+        if (newPhone !== user.phone) {
+            let phoneExists = users.some(u => u.id !== user.id && u.phone === newPhone);
+            if (phoneExists) return showMsg("هذا الرقم مستخدم بالفعل!", "error");
+            user.phone = newPhone;
+        }
+
+        // تحديث باقي البيانات
+        user.email2 = document.getElementById('edit_email2').value.trim();
+        user.phone2 = document.getElementById('edit_phone2').value.trim();
+        user.gender = document.getElementById('edit_gender').value;
+        user.age = document.getElementById('edit_age').value;
+        user.country = document.getElementById('edit_country').value;
+        user.bio = document.getElementById('edit_bio').value;
+
+        // حفظ
+        users[userIdx] = user;
+        setData('app_users', users);
+        setData('currentUser', user);
+
+        showMsg("تم التحديث بنجاح", "success");
+        setTimeout(() => { location.reload(); }, 1000);
+    }
+
+    function deleteAccount() {
+        if (confirm("هل أنت متأكد من حذف الحساب نهائياً؟")) {
+            let pass = prompt("أدخل كلمة المرور للتأكيد:");
+            if (pass === sessionUser.password) {
+                let filtered = getData('app_users').filter(u => u.id !== sessionUser.id);
+                setData('app_users', filtered);
+                localStorage.removeItem('currentUser');
+                window.location.replace('Login.html');
+            } else {
+                alert("كلمة المرور خاطئة");
+            }
+        }
+    }
+
+    window.onload = init;
+</script>
+
+</body>
+</html>

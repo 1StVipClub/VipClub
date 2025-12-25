@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الدخول والاشتراك</title>
+    <style>
+        :root { --primary: #6366f1; --secondary: #a855f7; --bg: #f8fafc; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: var(--primary); margin-bottom: 20px; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.85em; }
+        input, select { width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; transition: 0.3s; }
+        input:focus { border-color: var(--primary); outline: none; }
+        button { width: 100%; padding: 12px; background: linear-gradient(to right, var(--primary), var(--secondary)); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .switch-btn { text-align: center; margin-top: 15px; font-size: 0.9em; color: #64748b; }
+        .switch-link { color: var(--primary); cursor: pointer; text-decoration: underline; font-weight: bold; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="card" id="formCard">
+    <div id="registerSection">
+        <h2>إنشاء حساب جديد</h2>
+        <form id="regForm">
+            <div class="form-group"><label>اسم المستخدم</label><input type="text" id="regUser" required></div>
+            <div class="form-group"><label>كلمة المرور</label><input type="password" id="regPass" required></div>
+            <div class="form-group"><label>البريد (اختياري)</label><input type="email" id="regEmail"></div>
+            <div class="form-group"><label>الهاتف (اختياري)</label><input type="tel" id="regPhone"></div>
+            <div class="form-group">
+                <label>الكود السري</label>
+                <select id="regQuestion">
+                    <option value="صديق الطفولة">اسم صديق الطفولة</option>
+                    <option value="الاسم المستعار">اسمك المستعار</option>
+                    <option value="المدرسة">اسم المدرسة</option>
+                </select>
+                <input type="text" id="regAnswer" placeholder="الإجابة" required style="margin-top:8px;">
+            </div>
+            <button type="submit">تسجيل الحساب</button>
+        </form>
+        <div class="switch-btn">لديك حساب؟ <span class="switch-link" onclick="toggleForm()">سجل دخولك هنا</span></div>
+    </div>
+
+    <div id="loginSection" class="hidden">
+        <h2>تسجيل الدخول</h2>
+        <form id="loginForm">
+            <div class="form-group"><label>اسم المستخدم</label><input type="text" id="loginUser" required></div>
+            <div class="form-group"><label>كلمة المرور</label><input type="password" id="loginPass" required></div>
+            <button type="submit" style="background: #10b981;">دخول</button>
+        </form>
+        <div class="switch-btn">ليس لديك حساب؟ <span class="switch-link" onclick="toggleForm()">إنشاء حساب جديد</span></div>
+    </div>
+</div>
+
+<script>
+    function toggleForm() {
+        document.getElementById('registerSection').classList.toggle('hidden');
+        document.getElementById('loginSection').classList.toggle('hidden');
+    }
+
+    // --- دالة فحص الحظر الجديدة ---
+    function checkUserBanStatus(user, usersList, index) {
+        if (!user.isBanned) return { isBanned: false };
+
+        const now = new Date().getTime();
+        
+        // إذا كان الحظر دائم
+        if (user.banExpiry === "permanent") {
+            return { isBanned: true, message: "حسابك محظور بشكل دائم!", remaining: "للأبد" };
+        }
+
+        const expiry = new Date(user.banExpiry).getTime();
+        const diff = expiry - now;
+
+        // إذا انتهى وقت الحظر، قم بفك الحظر تلقائياً
+        if (diff <= 0) {
+            usersList[index].isBanned = false;
+            usersList[index].banExpiry = "";
+            usersList[index].banReason = "";
+            localStorage.setItem('app_users', JSON.stringify(usersList));
+            return { isBanned: false };
+        }
+
+        // حساب الوقت المتبقي
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+        let remainingText = "";
+        if (days > 0) remainingText += days + " يوم و ";
+        if (hours > 0) remainingText += hours + " ساعة و ";
+        remainingText += mins + " دقيقة";
+
+        return { 
+            isBanned: true, 
+            message: `حسابك محظور!\nالسبب: ${user.banReason || 'غير محدد'}`, 
+            remaining: remainingText 
+        };
+    }
+
+    // إنشاء حساب جديد
+    document.getElementById('regForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const users = JSON.parse(localStorage.getItem('app_users')) || [];
+        
+        const exists = users.find(u => u.username === document.getElementById('regUser').value);
+        if(exists) {
+            alert('اسم المستخدم موجود بالفعل، اختر اسماً آخر.');
+            return;
+        }
+
+        const newUser = {
+            id: Math.floor(1000 + Math.random() * 9000),
+            username: document.getElementById('regUser').value,
+            password: document.getElementById('regPass').value,
+            email: document.getElementById('regEmail').value || '—',
+            phone: document.getElementById('regPhone').value || '—',
+            question: document.getElementById('regQuestion').value,
+            answer: document.getElementById('regAnswer').value,
+            nickname: document.getElementById('regUser').value,
+            balanceEGP: "0.00",
+            balanceUSD: "0.00",
+            notifications: [],
+            lastNicknameChange: 0,
+            createdAt: new Date().toISOString(),
+            // قيم الحظر الافتراضية
+            isBanned: false,
+            banExpiry: "",
+            banReason: ""
+        };
+
+        users.push(newUser);
+        localStorage.setItem('app_users', JSON.stringify(users));
+        alert('تم إنشاء الحساب بنجاح! رقم معرفك الفريد هو: #' + newUser.id);
+        toggleForm();
+    });
+
+    // تسجيل الدخول مع فحص الحظر
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const users = JSON.parse(localStorage.getItem('app_users')) || [];
+        const uName = document.getElementById('loginUser').value;
+        const uPass = document.getElementById('loginPass').value;
+
+        const userIndex = users.findIndex(u => u.username === uName && u.password === uPass);
+
+        if (userIndex !== -1) {
+            const foundUser = users[userIndex];
+
+            // فحص الحظر قبل تسجيل الدخول
+            const banStatus = checkUserBanStatus(foundUser, users, userIndex);
+            
+            if (banStatus.isBanned) {
+                alert(`${banStatus.message}\n\nالوقت المتبقي لفك الحظر: ${banStatus.remaining}`);
+                return; // إيقاف عملية تسجيل الدخول
+            }
+
+            // إذا لم يكن محظوراً، أكمل الدخول
+            localStorage.setItem('currentUser', JSON.stringify(foundUser));
+            alert('تم تسجيل الدخول بنجاح! جاري تحويلك...');
+            window.location.href = 'MarketPlace.html';
+        } else {
+            alert('خطأ: اسم المستخدم أو كلمة المرور غير صحيحة!');
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة عمليات الإيداع - VipClub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #0f172a;
+            --bg: #f8fafc;
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            background: var(--bg); 
+            padding: 20px; 
+            margin: 0; 
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 4px solid var(--primary);
+        }
+
+        .stat-card i { font-size: 2rem; color: var(--primary); opacity: 0.8; }
+        .stat-info h3 { margin: 0; font-size: 1.5rem; }
+        .stat-info p { margin: 0; color: #64748b; font-size: 0.9rem; }
+
+        .header-section { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 24px; 
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+        }
+
+        .header-top { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 25px; 
+        }
+
+        .header-top h2 { margin: 0; font-weight: 800; display: flex; align-items: center; gap: 12px; }
+
+        .search-box { position: relative; width: 100%; }
+        .search-box input { 
+            width: 100%; 
+            padding: 16px 50px 16px 20px; 
+            border-radius: 16px; 
+            border: 2px solid #f1f5f9; 
+            font-size: 1rem;
+            background: #f8fafc;
+            outline: none;
+            transition: 0.3s;
+            box-sizing: border-box;
+        }
+        .search-box input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
+        .search-box i { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+
+        .tabs-container {
+            display: flex;
+            gap: 12px;
+            background: #f1f5f9;
+            padding: 8px;
+            border-radius: 18px;
+            margin-bottom: 30px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 700;
+            color: #64748b;
+            border-radius: 14px;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+        .order-card { 
+            background: white; 
+            border-radius: 24px; 
+            padding: 25px; 
+            margin-bottom: 20px; 
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            align-items: center; 
+            gap: 20px;
+            box-shadow: var(--card-shadow);
+            transition: 0.3s;
+            border: 1px solid #f1f5f9;
+        }
+
+        .order-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+
+        .user-info-box { display: flex; align-items: center; gap: 15px; }
+        .user-avatar { width: 50px; height: 50px; background: #eef2ff; border-radius: 15px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.2rem; }
+
+        .order-details h4 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+        
+        .user-id-badge {
+            background: #e0e7ff;
+            color: #4338ca;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            border: 1px solid #c7d2fe;
+            letter-spacing: 0.5px;
+        }
+
+        .order-details p { margin: 6px 0; font-size: 0.9rem; color: #64748b; }
+        .status-badge { padding: 4px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: bold; }
+
+        .receipt-preview { position: relative; cursor: zoom-in; }
+        .receipt-img { 
+            width: 100px; height: 100px; object-fit: cover; 
+            border-radius: 18px; border: 3px solid #f1f5f9;
+            transition: 0.3s;
+        }
+        .receipt-img:hover { transform: scale(1.05); border-color: var(--primary); }
+
+        .actions { display: flex; flex-direction: column; gap: 10px; }
+        .btn { 
+            border: none; padding: 12px 20px; border-radius: 12px; cursor: pointer; 
+            font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; 
+            justify-content: center; gap: 8px; transition: 0.2s;
+        }
+        .btn-approve { background: var(--success); color: white; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3); }
+        .btn-reject { background: #fee2e2; color: var(--danger); }
+        .btn-restore { background: #e0e7ff; color: var(--primary); }
+        .btn-delete { background: #f8fafc; color: #94a3b8; }
+        .btn:active { transform: scale(0.95); }
+
+        .empty-state { 
+            text-align: center; padding: 100px 20px; background: white; 
+            border-radius: 30px; color: #94a3b8; box-shadow: var(--card-shadow);
+        }
+
+        @media (max-width: 900px) {
+            .order-card { grid-template-columns: 1fr; text-align: center; }
+            .user-info-box { flex-direction: column; }
+            .order-details h4 { justify-content: center; flex-wrap: wrap; }
+            .actions { flex-direction: row; }
+            .btn { flex: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <i class="fas fa-wallet"></i>
+            <div class="stat-info">
+                <h3 id="stat-pending">0</h3>
+                <p>طلبات معلقة</p>
+            </div>
+        </div>
+        <div class="stat-card" style="border-color: var(--success);">
+            <i class="fas fa-check-double" style="color: var(--success);"></i>
+            <div class="stat-info">
+                <h3 id="stat-accepted">0</h3>
+                <p>إيداعات مقبولة</p>
+            </div>
+        </div>
+        <div class="stat-card" style="border-color: var(--danger);">
+            <i class="fas fa-exclamation-circle" style="color: var(--danger);"></i>
+            <div class="stat-info">
+                <h3 id="stat-rejected">0</h3>
+                <p>طلبات مرفوضة</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="header-section">
+        <div class="header-top">
+            <h2><i class="fas fa-shield-alt"></i> إيداعات VIP Club</h2>
+            <button class="btn" style="background:var(--dark); color:white" onclick="triggerRefresh()">
+                <i class="fas fa-sync-alt" id="refreshIcon"></i> تحديث الطلبات
+            </button>
+        </div>
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" onkeyup="renderAll()" placeholder="ابحث برقم الإيداع (DEP-)، ID المستخدم، أو الاسم...">
+        </div>
+    </div>
+
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="switchTab('pending', this)">
+            <i class="fas fa-clock"></i> واردة
+        </button>
+        <button class="tab-btn" onclick="switchTab('accepted', this)">
+            <i class="fas fa-check-circle"></i> تم الشحن
+        </button>
+        <button class="tab-btn" onclick="switchTab('rejected', this)">
+            <i class="fas fa-times-circle"></i> مرفوضة
+        </button>
+    </div>
+
+    <div id="listContainer"></div>
+</div>
+
+<script>
+    let currentTab = 'pending';
+
+    const getDB = (key) => JSON.parse(localStorage.getItem(key)) || [];
+    const saveDB = (key, data) => localStorage.setItem(key, JSON.stringify(data));
+
+    function triggerRefresh() {
+        const icon = document.getElementById('refreshIcon');
+        icon.classList.add('fa-spin');
+        setTimeout(() => {
+            renderAll();
+            icon.classList.remove('fa-spin');
+        }, 600);
+    }
+
+    function switchTab(tab, btn) {
+        currentTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderAll();
+    }
+
+    // --- الوظيفة المعدلة لمعالجة العملات بدقة ---
+    function approveOrder(orderId) {
+        if (!confirm("تأكيد شحن الرصيد للمستخدم؟")) return;
+
+        let pending = getDB('admin_orders');
+        let accepted = getDB('accepted_orders');
+        let allUsers = getDB('app_users');
+
+        const index = pending.findIndex(o => o.orderId === orderId);
+        if (index === -1) return;
+
+        let order = pending[index];
+        
+        // فحص العملة بشكل أكثر دقة (من السعر أو من اسم المنتج)
+        const priceStr = order.price.toString().toUpperCase();
+        const productStr = (order.product || "").toUpperCase();
+        
+        const isUSD = priceStr.includes('USD') || priceStr.includes('USDT') || priceStr.includes('$') || productStr.includes('USD');
+        const currencyName = isUSD ? "دولار" : "ج.م";
+        const amount = parseFloat(order.price);
+
+        const userIndex = allUsers.findIndex(u => u.id === order.userId);
+        if (userIndex !== -1) {
+            if (isUSD) {
+                // شحن حساب الدولار حصراً
+                allUsers[userIndex].balanceUSD = (parseFloat(allUsers[userIndex].balanceUSD) || 0) + amount;
+            } else {
+                // شحن حساب الجنيه
+                allUsers[userIndex].balanceEGP = (parseFloat(allUsers[userIndex].balanceEGP) || 0) + amount;
+            }
+            
+            if(!allUsers[userIndex].notifications) allUsers[userIndex].notifications = [];
+            allUsers[userIndex].notifications.push({
+                id: Date.now(),
+                text: `✅ تم قبول إيداعك بمبلغ ${amount} ${currencyName} وشحن رصيدك بنجاح.`,
+                date: new Date().toLocaleString('ar-EG'),
+                read: false
+            });
+        }
+
+        order.status = "مقبول";
+        order.processedAt = new Date().toLocaleString('ar-EG');
+        
+        accepted.push(order);
+        pending.splice(index, 1);
+
+        saveDB('app_users', allUsers);
+        saveDB('admin_orders', pending);
+        saveDB('accepted_orders', accepted);
+
+        renderAll();
+    }
+
+    function rejectOrder(orderId) {
+        const reason = prompt("سبب الرفض:");
+        if (reason === null) return;
+
+        let pending = getDB('admin_orders');
+        let rejected = getDB('rejected_orders');
+        let allUsers = getDB('app_users');
+
+        const index = pending.findIndex(o => o.orderId === orderId);
+        let order = pending[index];
+
+        order.status = "مرفوض";
+        order.rejectReason = reason;
+
+        const userIndex = allUsers.findIndex(u => u.id === order.userId);
+        if (userIndex !== -1) {
+            if(!allUsers[userIndex].notifications) allUsers[userIndex].notifications = [];
+            allUsers[userIndex].notifications.push({
+                id: Date.now(),
+                text: `❌ تم رفض طلب الإيداع بقيمة ${order.price}. السبب: ${reason}`,
+                date: new Date().toLocaleString('ar-EG'),
+                read: false
+            });
+        }
+
+        rejected.push(order);
+        pending.splice(index, 1);
+
+        saveDB('app_users', allUsers);
+        saveDB('admin_orders', pending);
+        saveDB('rejected_orders', rejected);
+        renderAll();
+    }
+
+    function restoreOrder(orderId) {
+        if (!confirm("إعادة هذا الطلب إلى قائمة الواردة للمراجعة مرة أخرى؟")) return;
+
+        let rejected = getDB('rejected_orders');
+        let pending = getDB('admin_orders');
+
+        const index = rejected.findIndex(o => o.orderId === orderId);
+        if (index === -1) return;
+
+        let order = rejected[index];
+        delete order.rejectReason;
+        order.status = "قيد المراجعة";
+
+        pending.push(order);
+        rejected.splice(index, 1);
+
+        saveDB('admin_orders', pending);
+        saveDB('rejected_orders', rejected);
+        renderAll();
+    }
+
+    function renderAll() {
+        const container = document.getElementById('listContainer');
+        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+        const allUsers = getDB('app_users');
+
+        document.getElementById('stat-pending').innerText = getDB('admin_orders').filter(o => o.orderId.startsWith('DEP-')).length;
+        document.getElementById('stat-accepted').innerText = getDB('accepted_orders').filter(o => o.orderId.startsWith('DEP-')).length;
+        document.getElementById('stat-rejected').innerText = getDB('rejected_orders').filter(o => o.orderId.startsWith('DEP-')).length;
+
+        let sourceData = [];
+        if (currentTab === 'pending') sourceData = getDB('admin_orders');
+        else if (currentTab === 'accepted') sourceData = getDB('accepted_orders');
+        else sourceData = getDB('rejected_orders');
+
+        const filtered = sourceData.filter(o => 
+            o.orderId.startsWith('DEP-') && (
+            o.orderId.toLowerCase().includes(query) || 
+            o.userId.toString().includes(query) ||
+            o.username.toLowerCase().includes(query))
+        ).reverse();
+
+        if (filtered.length === 0) {
+            container.innerHTML = `<div class="empty-state"><i class="fas fa-layer-group fa-3x"></i><p>لا توجد طلبات إيداع حالياً</p></div>`;
+            return;
+        }
+
+        container.innerHTML = filtered.map(order => {
+            const currentUser = allUsers.find(u => u.id === order.userId);
+            const displayName = (currentUser && currentUser.nickname) ? currentUser.nickname : order.username;
+
+            // تحديد العملة للعرض فقط
+            const priceVal = order.price.toString().toUpperCase();
+            const prodName = (order.product || "").toUpperCase();
+            const isUsdType = priceVal.includes('USD') || priceVal.includes('$') || prodName.includes('USD');
+            const currencyLabel = isUsdType ? `<span style="color: #059669; font-weight:bold;">$ دولار</span>` : `<span style="color: #4f46e5; font-weight:bold;">ج.م جنيه</span>`;
+
+            return `
+                <div class="order-card">
+                    <div class="user-info-box">
+                        <div class="user-avatar"><i class="fas fa-user"></i></div>
+                        <div class="order-details">
+                            <h4>
+                                ${displayName} 
+                                <span class="user-id-badge">ID: ${order.userId}</span>
+                            </h4>
+                            <p>ID الإيداع: <b>${order.orderId}</b></p>
+                            <p><i class="far fa-clock"></i> ${order.time}</p>
+                            <p><i class="fas fa-money-bill-wave"></i> العملة: ${currencyLabel}</p>
+                            <p><i class="fas fa-wallet"></i> المبلغ المطلوب: <b style="color:var(--primary); font-size:1.15rem">${order.price}</b></p>
+                            ${order.rejectReason ? `<span class="status-badge" style="background:#fee2e2; color:var(--danger)">السبب: ${order.rejectReason}</span>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="receipt-preview">
+                        <img src="${order.receipt}" class="receipt-img" onclick="window.open(this.src)" title="اضغط لتكبير الإيصال">
+                    </div>
+
+                    <div class="actions">
+                        ${currentTab === 'pending' ? `
+                            <button class="btn btn-approve" onclick="approveOrder('${order.orderId}')">قبول وشحن</button>
+                            <button class="btn btn-reject" onclick="rejectOrder('${order.orderId}')">رفض الطلب</button>
+                        ` : ''}
+                        
+                        ${currentTab === 'rejected' ? `
+                            <button class="btn btn-restore" onclick="restoreOrder('${order.orderId}')"><i class="fas fa-undo"></i> استعادة للواردة</button>
+                        ` : ''}
+
+                        <button class="btn btn-delete" onclick="finalDelete('${order.orderId}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function finalDelete(id) {
+        if(!confirm("حذف السجل نهائياً؟")) return;
+        const key = currentTab === 'pending' ? 'admin_orders' : currentTab === 'accepted' ? 'accepted_orders' : 'rejected_orders';
+        let data = getDB(key).filter(o => o.orderId !== id);
+        saveDB(key, data);
+        renderAll();
+    }
+
+    window.onload = renderAll;
+</script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>إدارة الأرصدة والإشعارات - VipClub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; padding: 20px; }
+        .admin-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); max-width: 1100px; margin: 0 auto; }
+        .header-section { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; margin-bottom: 20px; padding-bottom: 10px; flex-wrap: wrap; gap: 15px; }
+        h1 { color: #1e293b; font-size: 1.5rem; margin: 0; display: flex; align-items: center; gap: 10px; }
+        
+        .search-box { position: relative; min-width: 300px; }
+        .search-box input { 
+            width: 100%; 
+            padding: 10px 40px 10px 15px; 
+            border-radius: 8px; 
+            background-color: #f1f5f9; 
+            border: 2px solid #ff0000; 
+            color: #000; 
+            font-family: inherit; 
+            outline: none; 
+            transition: 0.3s; 
+            font-weight: bold;
+        }
+        .search-box i { 
+            position: absolute; 
+            left: 15px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            color: #ff0000; 
+        }
+
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 12px; border: 1px solid #e2e8f0; text-align: center; }
+        th { background: #6366f1; color: white; font-weight: 600; }
+        tr:nth-child(even) { background-color: #f9fafb; }
+        
+        .action-btn { padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer; color: white; margin: 2px; font-weight: bold; transition: 0.2s; font-size: 0.9rem; }
+        .btn-balance { background: #10b981; }
+        .btn-notif { background: #f59e0b; }
+        
+        .empty-msg { padding: 40px; color: #64748b; text-align: center; }
+        .id-badge { background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="admin-card">
+    <div class="header-section">
+        <h1><i class="fas fa-users-cog"></i> التحكم في الحسابات</h1>
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="بحث بالمعرف، الاسم، أو الرصيد..." onkeyup="loadUsers()">
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>المستخدم</th>
+                <th>الاسم المستعار</th>
+                <th>الرصيد (ج.م)</th>
+                <th>الرصيد ($)</th>
+                <th>إجراءات الإدارة</th>
+            </tr>
+        </thead>
+        <tbody id="adminUsersBody"></tbody>
+    </table>
+</div>
+
+<script>
+    function loadUsers() {
+        let users = JSON.parse(localStorage.getItem('app_users')) || [];
+        const tbody = document.getElementById('adminUsersBody');
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        
+        tbody.innerHTML = '';
+
+        const filteredUsers = users.filter(user => {
+            return user.id.toString().includes(searchTerm) || 
+                   user.username.toLowerCase().includes(searchTerm) ||
+                   (user.nickname || "").toLowerCase().includes(searchTerm);
+        });
+
+        if (filteredUsers.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="empty-msg">لا توجد نتائج تطابق بحثك!</td></tr>`;
+            return;
+        }
+
+        filteredUsers.forEach((user) => {
+            // نمرر الـ ID بدلاً من الـ Index لضمان الدقة
+            tbody.innerHTML += `
+                <tr>
+                    <td><span class="id-badge">#${user.id}</span></td>
+                    <td>${user.username}</td>
+                    <td>${user.nickname || '<span style="color:#ccc">غير محدد</span>'}</td>
+                    <td style="color:#10b981; font-weight:bold;">${user.balanceEGP || 0}</td>
+                    <td style="color:#6366f1; font-weight:bold;">${user.balanceUSD || 0}</td>
+                    <td>
+                        <button class="action-btn btn-balance" onclick="updateBalance('${user.id}')">
+                            <i class="fas fa-wallet"></i> تعديل
+                        </button>
+                        <button class="action-btn btn-notif" onclick="sendNotification('${user.id}')">
+                            <i class="fas fa-bell"></i> إشعار
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function updateBalance(userId) {
+        let users = JSON.parse(localStorage.getItem('app_users')) || [];
+        let index = users.findIndex(u => u.id == userId); // البحث عن المستخدم بالـ ID
+
+        if (index !== -1) {
+            let currentUser = users[index];
+            let egp = prompt(`تعديل رصيد (${currentUser.username}) - ج.م:`, currentUser.balanceEGP || 0);
+            let usd = prompt(`تعديل رصيد (${currentUser.username}) - $:`, currentUser.balanceUSD || 0);
+            
+            if (egp !== null && usd !== null) {
+                users[index].balanceEGP = parseFloat(egp) || 0;
+                users[index].balanceUSD = parseFloat(usd) || 0;
+
+                // إضافة إشعار للمستخدم المحدد فقط
+                if(!users[index].notifications) users[index].notifications = [];
+                users[index].notifications.push({
+                    id: Date.now(),
+                    text: `✅ تم تحديث رصيدك. الرصيد الجديد: ${users[index].balanceEGP} ج.م | ${users[index].balanceUSD} $`,
+                    read: false,
+                    date: new Date().toLocaleString('ar-EG')
+                });
+
+                localStorage.setItem('app_users', JSON.stringify(users));
+                loadUsers();
+                alert("تم تحديث الرصيد وإرسال إشعار للمستخدم.");
+            }
+        }
+    }
+
+    function sendNotification(userId) {
+        let users = JSON.parse(localStorage.getItem('app_users')) || [];
+        let index = users.findIndex(u => u.id == userId);
+
+        if (index !== -1) {
+            let msg = prompt("اكتب نص الإشعار للمستخدم " + users[index].username + ":");
+            if (msg && msg.trim() !== "") {
+                if(!users[index].notifications) users[index].notifications = [];
+                users[index].notifications.push({
+                    id: Date.now(),
+                    text: msg,
+                    read: false,
+                    date: new Date().toLocaleString('ar-EG')
+                });
+                localStorage.setItem('app_users', JSON.stringify(users));
+                alert("تم إرسال الإشعار بنجاح.");
+            }
+        }
+    }
+
+    window.onload = loadUsers;
+</script>
+</body>
+</html>

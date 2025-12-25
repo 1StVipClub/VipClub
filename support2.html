@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مركز الدعم - VipClub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --dark: #1e293b;
+            --bg: #f8fafc;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .support-container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--white);
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin: 15px;
+        }
+
+        .support-header {
+            background: var(--primary);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .support-header h2 { margin: 0; font-size: 1.5rem; }
+        .support-header p { opacity: 0.9; font-size: 0.9rem; margin-top: 8px; }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+
+        .options-grid {
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .support-card {
+            border: 2px solid #f1f5f9;
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-decoration: none;
+            color: var(--dark);
+        }
+
+        .support-card:hover {
+            border-color: var(--primary);
+            background: #f5f7ff;
+            transform: translateY(-3px);
+        }
+
+        .icon-box {
+            width: 50px;
+            height: 50px;
+            background: #eef2ff;
+            color: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .card-info h3 { margin: 0; font-size: 1rem; }
+        .card-info p { margin: 3px 0 0; font-size: 0.8rem; color: #64748b; }
+
+        #botSection {
+            display: none;
+            padding: 20px;
+            background: #f1f5f9;
+        }
+
+        .chat-box {
+            height: 400px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 10px;
+            border-radius: 15px;
+        }
+
+        .msg {
+            padding: 12px 15px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            max-width: 85%;
+            line-height: 1.5;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .bot-msg { background: white; border-top-right-radius: 2px; align-self: flex-start; border: 1px solid #e2e8f0; }
+        .user-msg { background: var(--primary); color: white; border-top-left-radius: 2px; align-self: flex-end; }
+
+        .questions-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+            padding: 10px;
+        }
+
+        .question-btn {
+            background: #ffffff;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-align: right;
+            transition: 0.2s;
+            font-weight: 600;
+        }
+
+        .question-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .action-link-btn {
+            display: inline-block;
+            margin-top: 10px;
+            background: var(--primary);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="support-container">
+    <div class="support-header">
+        <a href="MarketPlace.html" class="back-btn"><i class="fas fa-arrow-right"></i></a>
+        <h2>مركز المساعدة</h2>
+        <p>فريق VipClub متاح دائماً لخدمتك</p>
+    </div>
+
+    <div class="options-grid" id="mainOptions">
+        <a href="chatwithadmin3.html" class="support-card">
+            <div class="icon-box"><i class="fas fa-comments"></i></div>
+            <div class="card-info">
+                <h3>المحادثة المباشرة</h3>
+                <p>تحدث الآن مع خدمة العملاء</p>
+            </div>
+        </a>
+
+        <div class="support-card" onclick="openBot()">
+            <div class="icon-box"><i class="fas fa-robot"></i></div>
+            <div class="card-info">
+                <h3>بوت الرد التلقائي</h3>
+                <p>إجابات فورية على الأسئلة الشائعة</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="botSection">
+        <div class="chat-box" id="chatBox">
+            <div class="msg bot-msg">
+                مرحباً بك! أنا مساعد VipClub الذكي 🤖. كيف يمكنني مساعدتك؟
+            </div>
+        </div>
+        
+        <div class="questions-container" id="botQuestions">
+            <button class="question-btn" onclick="askQuestion('أين أجد بطاقاتي؟', 1)">أين أجد بطاقاتي؟</button>
+            <button class="question-btn" onclick="askQuestion('كم يستغرق شحن الرصيد؟', 2)">كم يستغرق شحن الرصيد أو الطلب؟</button>
+            <button class="question-btn" onclick="askQuestion('لماذا تم رفض طلبي؟', 3)">لماذا تم رفض طلبي؟</button>
+            <button class="question-btn" style="border-color:#cbd5e1; color:#64748b" onclick="location.reload()">العودة للخيارات الرئيسية</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openBot() {
+        document.getElementById('mainOptions').style.display = 'none';
+        document.getElementById('botSection').style.display = 'block';
+    }
+
+    function askQuestion(questionText, qNum) {
+        const chatBox = document.getElementById('chatBox');
+        
+        const userDiv = document.createElement('div');
+        userDiv.className = 'msg user-msg';
+        userDiv.innerText = questionText;
+        chatBox.appendChild(userDiv);
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        setTimeout(() => {
+            let response = "";
+            let actionBtn = "";
+
+            if (qNum === 1) {
+                response = "تجد كافة بطاقاتك التي قمت بشرائها في **قسم المحفظة**. يمكنك الوصول إليها بسرعة عبر الزر أدناه:";
+                actionBtn = `<br><a href="Wallet.html" class="action-link-btn"><i class="fas fa-wallet"></i> الذهاب للمحفظة</a>`;
+            } 
+            else if (qNum === 2) {
+                response = "عادة ما يستغرق الأمر من **30 دقيقة إلى 3 ساعات**. بمجرد التحقق، سيصلك إشعار فوري بحالة الطلب في قائمة الإشعارات.";
+            } 
+            else if (qNum === 3) {
+                response = "يرجى فحص السبب المذكور في **قائمة الإشعارات** بعناية. إذا لم تجد سبباً، يمكنك تقديم طعن بالتحدث معنا مباشرة:";
+                actionBtn = `<br><a href="chatwithadmin2.html" class="action-link-btn"><i class="fas fa-headset"></i> التحدث مع موظف</a>`;
+            }
+
+            const botDiv = document.createElement('div');
+            botDiv.className = 'msg bot-msg';
+            botDiv.innerHTML = response + actionBtn;
+            chatBox.appendChild(botDiv);
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }, 500);
+    }
+</script>
+
+</body>
+</html>

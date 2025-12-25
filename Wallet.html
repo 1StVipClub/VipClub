@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محفظتي - VipClub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { 
+            --primary: #6366f1; 
+            --success: #10b981;
+            --danger: #ef4444; 
+            --dark: #1e293b; 
+            --bg: #f1f5f9; 
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; }
+        
+        /* شريط التنقل */
+        .navbar { background: #fff; height: 65px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 9999; }
+        .icon-btn { font-size: 1.4rem; color: var(--dark); cursor: pointer; position: relative; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: 0.2s; border: none; background: none; }
+        .icon-btn:hover { background: #f0f0f0; }
+        .badge { position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; font-size: 0.7rem; min-width: 18px; height: 18px; display: none; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid white; font-weight: bold; }
+
+        /* القوائم المنسدلة */
+        .dropdown-overlay { position: fixed; top: 70px; width: 320px; max-width: 90%; background: white; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.25); display: none; flex-direction: column; z-index: 10000; border: 1px solid #ddd; overflow: hidden; }
+        #profileDropdown { right: 20px; text-align: center; padding: 25px 20px; }
+        #notifDropdown { left: 20px; text-align: right; }
+        .dropdown-overlay.active { display: flex !important; animation: slideDown 0.2s ease-out; }
+        
+        /* أيقونة الملف الشخصي الكبيرة */
+        .profile-large-icon { font-size: 3.5rem; color: var(--primary); margin-bottom: 10px; display: block; }
+        
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* الهيدر والرصيد */
+        .wallet-header { background: linear-gradient(135deg, #6366f1, #a855f7); color: white; padding: 30px 20px; text-align: center; border-radius: 0 0 30px 30px; margin-bottom: 20px; }
+        .balance-amount { font-size: 2.5rem; font-weight: bold; margin: 10px 0; }
+
+        /* زر التحديث المركزي */
+        .refresh-section { text-align: center; margin-bottom: 10px; }
+        .refresh-btn { background: white; border: 1px solid #ddd; padding: 10px 25px; border-radius: 50px; cursor: pointer; font-weight: bold; color: var(--dark); transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: inline-flex; align-items: center; gap: 10px; }
+        .refresh-btn:hover { background: var(--primary); color: white; }
+
+        /* شبكة البطاقات */
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; padding: 20px; }
+        
+        /* تصميم البطاقة */
+        .gift-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1); position: relative; }
+        .card-top { background: #f3ba2f; color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 1.4rem; }
+        .card-body { padding: 20px; position: relative; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; background: #fff; }
+        
+        .scratch-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(45deg, #d1d5db, #9ca3af); display: flex; align-items: center; justify-content: center; color: #4b5563; font-weight: bold; cursor: crosshair; z-index: 5; transition: opacity 0.5s; user-select: none; }
+        .scratch-overlay.revealed { opacity: 0; pointer-events: none; }
+        
+        .secret-code { font-size: 1.5rem; font-weight: bold; letter-spacing: 2px; color: var(--primary); margin-bottom: 10px; }
+        .copy-btn { background: #f1f5f9; border: none; padding: 8px 15px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; color: var(--dark); display: none; align-items: center; gap: 8px; font-weight: bold; }
+
+        .card-info { padding: 12px 20px; background: #f8fafc; font-size: 0.8rem; color: #64748b; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .delete-btn { color: var(--danger); background: none; border: none; cursor: pointer; font-size: 1.1rem; }
+
+        /* الإشعارات */
+        .notif-item { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; }
+        .notif-item.unread { background: #eef2ff; border-right: 4px solid var(--primary); }
+        .notif-text { flex: 1; }
+        .delete-notif-btn { color: #ccc; cursor: pointer; padding: 5px; transition: 0.2s; }
+        .delete-notif-btn:hover { color: var(--danger); }
+        
+        .refresh-notif { cursor: pointer; transition: 0.5s; }
+        .refreshing { transform: rotate(360deg); color: var(--primary); }
+
+        #screenOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9998; display: none; background: rgba(0,0,0,0.3); backdrop-filter: blur(2px); }
+    </style>
+</head>
+<body>
+
+<div id="screenOverlay" onclick="closeAll()"></div>
+
+<nav class="navbar">
+    <button class="icon-btn" onclick="openMenu('profileDropdown')">
+        <i class="fas fa-user-circle"></i>
+    </button>
+    <div style="font-weight: bold;">محفظتي والبطاقات</div>
+    <button class="icon-btn" onclick="openMenu('notifDropdown')">
+        <i class="fas fa-bell"></i>
+        <span class="badge" id="notifBadge">0</span>
+    </button>
+</nav>
+
+<div id="profileDropdown" class="dropdown-overlay">
+    <i class="fas fa-user-circle profile-large-icon"></i>
+    <h4 id="p_nickname" style="margin: 5px 0;">المستخدم</h4>
+    <p style="margin-bottom: 15px; color: #64748b; font-size: 0.9rem;">معرف الحساب: <span id="p_id">0</span></p>
+    
+    <div style="background: #f8fafc; padding: 12px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+        <span style="font-size: 0.8rem; color: #64748b; display: block; margin-bottom: 4px;">الرصيد المتاح</span>
+        <b style="color: var(--success); font-size: 1.1rem;"><span id="p_egp">0</span> ج.م</b>
+    </div>
+    
+    <button onclick="logout()" style="width:100%; padding:12px; background:#fee2e2; color:var(--danger); border:none; border-radius:10px; cursor:pointer; font-weight: bold;">
+        <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+    </button>
+</div>
+
+<div id="notifDropdown" class="dropdown-overlay">
+    <div style="padding:15px; font-weight:bold; border-bottom:1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span>الإشعارات</span>
+            <i class="fas fa-sync-alt refresh-notif" id="notifRefreshIcon" onclick="refreshNotifs()" title="تحديث"></i>
+        </div>
+        <button onclick="markAllRead()" style="background:none; border:none; color:var(--primary); cursor:pointer; font-size: 0.75rem;">تحديد كقروء</button>
+    </div>
+    <div id="notifList" style="max-height:300px; overflow-y:auto;"></div>
+</div>
+
+<div class="wallet-header">
+    <small>إجمالي الرصيد</small>
+    <div class="balance-amount" id="userBalance">0.00 ج.م</div>
+</div>
+
+<div class="refresh-section">
+    <button class="refresh-btn" onclick="loadWallet()">
+        <i class="fas fa-sync-alt"></i> تحديث البيانات
+    </button>
+</div>
+
+<div class="cards-grid" id="cardsGrid"></div>
+
+<script>
+    // التحكم في القوائم
+    function openMenu(id) {
+        const target = document.getElementById(id);
+        const isOpen = target.classList.contains('active');
+        closeAll();
+        if(!isOpen) {
+            target.classList.add('active');
+            document.getElementById('screenOverlay').style.display = 'block';
+            if(id === 'notifDropdown') updateNotifUI();
+        }
+    }
+
+    function closeAll() {
+        document.querySelectorAll('.dropdown-overlay').forEach(m => m.classList.remove('active'));
+        document.getElementById('screenOverlay').style.display = 'none';
+    }
+
+    // تحميل البيانات
+    function loadWallet() {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if(!user) { window.location.href = 'Login.html'; return; }
+        
+        const allUsers = JSON.parse(localStorage.getItem('app_users')) || [];
+        const userData = allUsers.find(u => u.id === user.id);
+        
+        if (userData) {
+            document.getElementById('userBalance').innerText = `${userData.balanceEGP || 0} ج.م`;
+            document.getElementById('p_egp').innerText = userData.balanceEGP || 0;
+            document.getElementById('p_nickname').innerText = userData.nickname || userData.username;
+            document.getElementById('p_id').innerText = userData.id;
+
+            const notifs = userData.notifications || [];
+            const unreadCount = notifs.filter(n => !n.read).length;
+            const badge = document.getElementById('notifBadge');
+            if(unreadCount > 0) {
+                badge.innerText = unreadCount;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+
+            renderCards(userData.purchasedCards || []);
+        }
+    }
+
+    function refreshNotifs() {
+        const icon = document.getElementById('notifRefreshIcon');
+        icon.classList.add('refreshing');
+        setTimeout(() => {
+            loadWallet();
+            updateNotifUI();
+            icon.classList.remove('refreshing');
+        }, 800);
+    }
+
+    function updateNotifUI() {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        const allUsers = JSON.parse(localStorage.getItem('app_users')) || [];
+        const userData = allUsers.find(u => u.id === user.id);
+        const list = document.getElementById('notifList');
+        
+        const notifs = userData.notifications || [];
+        list.innerHTML = notifs.length === 0 ? '<div style="padding:20px; color:#888; text-align:center;">لا توجد إشعارات</div>' : '';
+        
+        [...notifs].reverse().forEach(n => {
+            const div = document.createElement('div');
+            div.className = `notif-item ${!n.read ? 'unread' : ''}`;
+            div.innerHTML = `
+                <div class="notif-text">
+                    <div>${n.text}</div>
+                    <small style="color:#aaa;">${n.date}</small>
+                </div>
+                <i class="fas fa-trash-alt delete-notif-btn" onclick="deleteSingleNotif(${n.id})" title="حذف"></i>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    function deleteSingleNotif(notifId) {
+        let allUsers = JSON.parse(localStorage.getItem('app_users')) || [];
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        const uIdx = allUsers.findIndex(u => u.id === user.id);
+
+        if(uIdx !== -1) {
+            allUsers[uIdx].notifications = allUsers[uIdx].notifications.filter(n => n.id !== notifId);
+            localStorage.setItem('app_users', JSON.stringify(allUsers));
+            updateNotifUI();
+            loadWallet();
+        }
+    }
+
+    function markAllRead() {
+        let allUsers = JSON.parse(localStorage.getItem('app_users')) || [];
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        const uIdx = allUsers.findIndex(u => u.id === user.id);
+        if(uIdx !== -1) {
+            allUsers[uIdx].notifications = (allUsers[uIdx].notifications || []).map(n => ({...n, read: true}));
+            localStorage.setItem('app_users', JSON.stringify(allUsers));
+            loadWallet();
+            updateNotifUI();
+        }
+    }
+
+    function renderCards(cards) {
+        const grid = document.getElementById('cardsGrid');
+        grid.innerHTML = cards.length === 0 ? '<p style="text-align:center; grid-column:1/-1; padding:50px; color:#888;">لا توجد بطاقات حالياً</p>' : '';
+        
+        cards.forEach((card, index) => {
+            grid.innerHTML += `
+                <div class="gift-card">
+                    <div class="card-top" style="background:${card.color || '#f3ba2f'}">
+                        <i class="fas fa-gift"></i> ${card.value}
+                    </div>
+                    <div class="card-body">
+                        <div class="secret-code">${card.code}</div>
+                        <button class="copy-btn" id="copy-btn-${index}" onclick="copyCode('${card.code}', this)">
+                            <i class="fas fa-copy"></i> نسخ الكود
+                        </button>
+                        <div class="scratch-overlay" id="overlay-${index}" onclick="revealCard(${index})">
+                            اسحب لرؤية الكود
+                        </div>
+                    </div>
+                    <div class="card-info">
+                        <span>${card.date}</span>
+                        <button class="delete-btn" onclick="deleteCard(${index})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function revealCard(id) {
+        document.getElementById(`overlay-${id}`).classList.add('revealed');
+        document.getElementById(`copy-btn-${id}`).style.display = 'flex';
+    }
+
+    function copyCode(code, btn) {
+        navigator.clipboard.writeText(code);
+        const oldHtml = btn.innerHTML;
+        btn.innerHTML = 'تم النسخ!';
+        setTimeout(() => btn.innerHTML = oldHtml, 2000);
+    }
+
+    function deleteCard(index) {
+        const warningMessage = `⚠️ تحذير هـام\nهل أنت متأكد من حذف هذه البطاقة؟\n\n- سوف تفقد بيانات البطاقة نهائياً.\n- لن تتمكن من استعادتها مرة أخرى.`;
+
+        if (confirm(warningMessage)) {
+            let allUsers = JSON.parse(localStorage.getItem('app_users')) || [];
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const uIdx = allUsers.findIndex(u => u.id === user.id);
+
+            if (uIdx !== -1) {
+                allUsers[uIdx].purchasedCards.splice(index, 1);
+                localStorage.setItem('app_users', JSON.stringify(allUsers));
+                loadWallet();
+            }
+        }
+    }
+
+    function logout() { localStorage.removeItem('currentUser'); window.location.href = 'Login.html'; }
+    window.onload = loadWallet;
+</script>
+</body>
+</html>

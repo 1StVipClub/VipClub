@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة مبيعات البطاقات - VipClub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #0f172a;
+            --bg: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 20px;
+            color: var(--dark);
+        }
+
+        .admin-container { max-width: 1100px; margin: 0 auto; }
+
+        .header-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .header-top { display: flex; justify-content: space-between; align-items: center; }
+        .header-top h2 { margin: 0; font-size: 1.6rem; display: flex; align-items: center; gap: 12px; color: var(--primary); }
+
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            background: #f1f5f9;
+            padding: 5px;
+            border-radius: 12px;
+        }
+        .tab-btn {
+            flex: 1;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #64748b;
+            background: transparent;
+            transition: 0.3s;
+        }
+        .tab-btn.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .controls-row { display: flex; gap: 15px; flex-wrap: wrap; }
+        
+        .search-wrapper { flex: 1; position: relative; min-width: 300px; }
+        .search-wrapper i { position: absolute; right: 15px; top: 14px; color: #94a3b8; }
+        .search-wrapper input {
+            width: 100%; padding: 12px 45px 12px 15px;
+            border-radius: 12px; border: 1.5px solid #e2e8f0;
+            box-sizing: border-box; transition: 0.3s; font-size: 1rem;
+        }
+        .search-wrapper input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(99,102,241,0.1); }
+
+        .btn-refresh {
+            background: var(--primary); color: white; border: none; padding: 12px 25px;
+            border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px;
+            font-weight: 600; transition: 0.3s;
+        }
+        .btn-refresh:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(99,102,241,0.3); }
+
+        .order-card {
+            background: white; border-radius: 20px; padding: 25px; margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #eef2f6;
+            animation: slideIn 0.4s ease-out;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; }
+        .user-badge { background: #f0f4ff; color: #4338ca; padding: 6px 14px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; }
+        .trx-id { font-family: 'Courier New', monospace; color: #64748b; font-size: 0.95rem; background: #f8fafc; padding: 4px 10px; border-radius: 6px; }
+
+        .card-body { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .product-name { font-size: 1.25rem; font-weight: 800; color: #1e293b; margin: 0; }
+        .price-tag { font-size: 1.3rem; color: var(--success); font-weight: 900; }
+
+        .action-panel {
+            background: #f8fafc; padding: 20px; border-radius: 15px;
+            display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+        }
+        .code-input {
+            flex: 1; min-width: 250px; padding: 12px 15px;
+            border: 2px solid #cbd5e1; border-radius: 10px;
+            font-weight: bold; text-align: center; font-size: 1rem;
+        }
+
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn { border: none; padding: 12px 22px; border-radius: 10px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-approve { background: var(--success); color: white; }
+        .btn-reject { background: var(--danger); color: white; }
+        .btn-delete { background: #64748b; color: white; }
+        .btn-restore { background: var(--warning); color: white; }
+
+        .empty-state { text-align: center; padding: 80px 20px; color: #cbd5e1; }
+        .fa-spin { animation: spin 0.8s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="admin-container">
+    <div class="header-panel">
+        <div class="header-top">
+            <h2><i class="fas fa-cart-arrow-down"></i> مراجعة طلبات الشراء</h2>
+            <div id="counterBadge" style="background: var(--warning); color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: bold;">جاري التحميل...</div>
+        </div>
+
+        <div class="filter-tabs">
+            <button class="tab-btn active" onclick="changeTab('قيد المراجعة', this)">قيد المراجعة</button>
+            <button class="tab-btn" onclick="changeTab('تم القبول', this)">المقبولة</button>
+            <button class="tab-btn" onclick="changeTab('تم الرفض', this)">المرفوضة</button>
+        </div>
+        
+        <div class="controls-row">
+            <div class="search-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" id="orderSearch" placeholder="بحث باسم العميل، ID..." oninput="fetchAndRender()">
+            </div>
+            <button class="btn-refresh" onclick="triggerRefresh()">
+                <i class="fas fa-sync-alt" id="syncIcon"></i> تحديث الطلبات
+            </button>
+        </div>
+    </div>
+
+    <div id="ordersWrapper"></div>
+</div>
+
+<script>
+    let currentStatus = 'قيد المراجعة';
+
+    function changeTab(status, btn) {
+        currentStatus = status;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        fetchAndRender();
+    }
+
+    function triggerRefresh() {
+        const icon = document.getElementById('syncIcon');
+        icon.classList.add('fa-spin');
+        setTimeout(() => {
+            fetchAndRender();
+            icon.classList.remove('fa-spin');
+        }, 700);
+    }
+
+    function fetchAndRender() {
+        const wrapper = document.getElementById('ordersWrapper');
+        const searchInput = document.getElementById('orderSearch').value.toLowerCase();
+        
+        const rawOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
+        const allUsers = JSON.parse(localStorage.getItem('app_users')) || [];
+        
+        let purchaseOrders = rawOrders.filter(o => o.status === currentStatus && !o.orderId.startsWith('DEP-'));
+
+        if (searchInput) {
+            purchaseOrders = purchaseOrders.filter(o => 
+                o.orderId.toLowerCase().includes(searchInput) || 
+                o.username.toLowerCase().includes(searchInput)
+            );
+        }
+
+        document.getElementById('counterBadge').innerText = `الطلبات: ${purchaseOrders.length}`;
+
+        if (purchaseOrders.length === 0) {
+            wrapper.innerHTML = `<div class="empty-state"><i class="fas fa-clipboard-check" style="font-size:4rem"></i><p>لا توجد طلبات في هذا القسم</p></div>`;
+            return;
+        }
+
+        wrapper.innerHTML = '';
+        purchaseOrders.reverse().forEach(order => {
+            const currentUser = allUsers.find(u => u.id === order.userId);
+            const displayName = (currentUser && currentUser.nickname) ? currentUser.nickname : order.username;
+
+            // تحديد العملة للعرض: إذا كان السعر يحتوي على USD يعرضه كما هو، وإلا يضيف ج.م
+            const displayPrice = String(order.price).includes('USD') ? `${order.price}` : `${order.price} ج.م`;
+
+            let actionButtons = '';
+            
+            if (currentStatus === 'قيد المراجعة') {
+                actionButtons = `
+                    <input type="text" class="code-input" id="input-${order.orderId}" placeholder="ألصق كود البطاقة هنا...">
+                    <div class="btn-group">
+                        <button class="btn btn-approve" onclick="handleAction('${order.orderId}', 'accept')"><i class="fas fa-check"></i> قبول</button>
+                        <button class="btn btn-reject" onclick="handleAction('${order.orderId}', 'reject')"><i class="fas fa-ban"></i> رفض وإرجاع</button>
+                        <button class="btn btn-delete" onclick="handleAction('${order.orderId}', 'delete')"><i class="fas fa-trash"></i> حذف</button>
+                    </div>
+                `;
+            } else {
+                actionButtons = `
+                    <div style="flex:1; color:#64748b; font-size:0.9rem">
+                        <i class="fas fa-info-circle"></i> حالة الطلب: ${order.status}
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-restore" onclick="handleAction('${order.orderId}', 'restore')"><i class="fas fa-undo"></i> استعادة</button>
+                        <button class="btn btn-delete" onclick="handleAction('${order.orderId}', 'delete')"><i class="fas fa-trash"></i> حذف</button>
+                    </div>
+                `;
+            }
+
+            wrapper.innerHTML += `
+                <div class="order-card" id="row-${order.orderId}">
+                    <div class="card-header">
+                        <span class="user-badge">${displayName} (ID: ${order.userId})</span>
+                        <span class="trx-id">${order.orderId}</span>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="product-name">${order.product}</h3>
+                        <div class="price-tag">${displayPrice}</div>
+                    </div>
+                    <div class="action-panel">
+                        ${actionButtons}
+                    </div>
+                </div>`;
+        });
+    }
+
+    function handleAction(orderId, type) {
+        let orders = JSON.parse(localStorage.getItem('admin_orders')) || [];
+        let users = JSON.parse(localStorage.getItem('app_users')) || [];
+        
+        const oIdx = orders.findIndex(o => o.orderId === orderId);
+        if (oIdx === -1) return;
+
+        const uId = orders[oIdx].userId;
+        const uIdx = users.findIndex(u => u.id === uId);
+
+        if (uIdx === -1 && type !== 'delete') { alert("خطأ: لم يتم العثور على حساب العميل"); return; }
+
+        if (type === 'accept') {
+            const codeValue = document.getElementById(`input-${orderId}`).value.trim();
+            if (!codeValue) { alert("يجب إدخال الكود أولاً!"); return; }
+            orders[oIdx].status = 'تم القبول';
+            if (!users[uIdx].purchasedCards) users[uIdx].purchasedCards = [];
+            users[uIdx].purchasedCards.push({
+                code: codeValue,
+                value: orders[oIdx].product,
+                date: new Date().toLocaleString('ar-EG'),
+                color: "#6366f1"
+            });
+            users[uIdx].notifications.push({
+                id: Date.now(),
+                text: `✅ مبروك! تم قبول طلب ${orders[oIdx].product}. الكود متاح الآن في محفظتك.`,
+                read: false,
+                date: new Date().toLocaleString('ar-EG')
+            });
+
+        } else if (type === 'reject') {
+            const msg = prompt("سبب الرفض (سيظهر للمستخدم):");
+            if (msg === null) return;
+
+            // تحديد نوع العملة والقيمة المسترجعة
+            const priceRaw = String(orders[oIdx].price);
+            const isUSD = priceRaw.includes('USD');
+            const priceValue = Number(priceRaw.replace(/[^\d.]/g, ''));
+            
+            if (isNaN(priceValue)) {
+                alert("خطأ في قراءة سعر الطلب!");
+                return;
+            }
+
+            // إرجاع المبلغ للرصيد الصحيح
+            let currencyLabel = "";
+            if (isUSD) {
+                const currentUSD = Number(users[uIdx].balanceUSD) || 0;
+                users[uIdx].balanceUSD = currentUSD + priceValue;
+                currencyLabel = "USD";
+            } else {
+                const currentEGP = Number(users[uIdx].balanceEGP) || 0;
+                users[uIdx].balanceEGP = currentEGP + priceValue;
+                currencyLabel = "ج.م";
+            }
+
+            // استعادة المخزون (Stock)
+            if (orders[oIdx].productId) {
+                 let products = JSON.parse(localStorage.getItem('store_products')) || [];
+                 let pIdx = products.findIndex(p => p.id == orders[oIdx].productId);
+                 if (pIdx !== -1) {
+                     products[pIdx].stock += 1;
+                     localStorage.setItem('store_products', JSON.stringify(products));
+                 }
+            }
+            
+            orders[oIdx].status = 'تم الرفض';
+            
+            if (!users[uIdx].notifications) users[uIdx].notifications = [];
+            users[uIdx].notifications.push({
+                id: Date.now(),
+                text: `❌ تم رفض طلبك لـ ${orders[oIdx].product}. السبب: ${msg || 'غير محدد'}. تم إعادة مبلغ ${priceValue} ${currencyLabel} لرصيدك.`,
+                read: false,
+                date: new Date().toLocaleString('ar-EG')
+            });
+            
+            alert(`✅ تم رفض الطلب بنجاح وإرجاع ${priceValue} ${currencyLabel} إلى حساب ${users[uIdx].username}`);
+
+        } else if (type === 'restore') {
+            if(!confirm("هل تريد إعادة الطلب لقائمة 'قيد المراجعة'؟")) return;
+            orders[oIdx].status = 'قيد المراجعة';
+
+        } else if (type === 'delete') {
+            if(!confirm("هل أنت متأكد من حذف هذا السجل نهائياً؟")) return;
+            orders.splice(oIdx, 1);
+        }
+
+        // حفظ البيانات النهائية
+        localStorage.setItem('admin_orders', JSON.stringify(orders));
+        localStorage.setItem('app_users', JSON.stringify(users));
+
+        // تأثير بصري عند الحذف أو النقل
+        const element = document.getElementById(`row-${orderId}`);
+        if(element) element.style.opacity = '0';
+        setTimeout(() => fetchAndRender(), 300);
+    }
+
+    window.onload = fetchAndRender;
+</script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة الإدارة - التحكم المتقدم</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --dark: #1e293b;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f1f5f9; padding: 30px; margin: 0; }
+        .container { 
+            background: white; 
+            border-radius: 15px; 
+            padding: 25px; 
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            max-width: 1500px; /* زيادة العرض لاستيعاب الأعمدة الإضافية */
+            margin: auto;
+        }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; gap: 20px; flex-wrap: wrap; }
+        h1 { color: var(--dark); border-right: 5px solid var(--primary); padding-right: 15px; margin: 0; font-size: 1.5rem; }
+        
+        .search-box { flex: 1; min-width: 250px; }
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; font-size: 0.9rem; }
+        th { background: var(--primary); color: white; padding: 15px; font-weight: 500; }
+        td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: center; color: #475569; }
+        tr:hover { background-color: #f8fafc; }
+
+        .id-tag { background: #e2e8f0; color: #475569; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
+        .username-text { font-weight: bold; color: #1e293b; }
+        .nickname-text { color: var(--primary); font-weight: 600; }
+        
+        .status-active { color: var(--success); font-weight: bold; }
+        .status-banned { color: var(--danger); font-weight: bold; }
+        
+        .ban-info { font-size: 0.75rem; color: #64748b; margin-top: 5px; line-height: 1.4; }
+        .time-remaining { display: inline-block; background: #fee2e2; color: #b91c1c; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-top: 3px; }
+
+        .password-cell { font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; color: #4338ca; font-weight: bold; border: 1px solid #e2e8f0; }
+
+        .btn { 
+            padding: 8px 10px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 0.75em; 
+            font-weight: 600;
+            transition: 0.2s;
+            margin: 2px;
+        }
+        .btn-edit { background: #6366f1; color: white; }
+        .btn-ban { background: var(--warning); color: white; }
+        .btn-unban { background: var(--success); color: white; }
+        .btn-del { background: #fee2e2; color: #991b1b; }
+
+        .banned-row { background-color: #fff1f2 !important; }
+
+        @media (max-width: 1024px) {
+            .container { padding: 10px; overflow-x: auto; }
+            table { min-width: 1000px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>إدارة المستخدمين - التحكم المتقدم</h1>
+        <div class="search-box">
+            <input type="text" id="adminSearch" onkeyup="loadData()" placeholder="بحث بالاسم، المستعار، الهاتف، أو كلمة المرور...">
+        </div>
+        <button class="btn btn-edit" onclick="loadData()">تحديث البيانات ↻</button>
+    </div>
+
+    <table id="mainTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>اسم المستخدم</th>
+                <th>الاسم المستعار</th>
+                <th>كلمة المرور</th> 
+                <th>الحالة</th>
+                <th>البريد والهاتف</th>
+                <th>تفاصيل الحظر</th>
+                <th>إجراءات</th>
+            </tr>
+        </thead>
+        <tbody id="adminTableBody"></tbody>
+    </table>
+</div>
+
+<script>
+    function getRemainingTime(expiryDate) {
+        if (!expiryDate || expiryDate === "permanent") return "حظر دائم";
+        const now = new Date().getTime();
+        const expiry = new Date(expiryDate).getTime();
+        const diff = expiry - now;
+        if (diff <= 0) return "منتهي";
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        let remaining = "";
+        if (days > 0) remaining += days + " يوم ";
+        if (hours > 0) remaining += hours + " ساعة ";
+        if (mins > 0) remaining += mins + " دقيقة";
+        return remaining || "أقل من دقيقة";
+    }
+
+    function loadData() {
+        const users = JSON.parse(localStorage.getItem('app_users')) || [];
+        const tbody = document.getElementById('adminTableBody');
+        const searchTerm = document.getElementById('adminSearch').value.toLowerCase();
+        const now = new Date().getTime();
+        
+        tbody.innerHTML = '';
+
+        users.forEach((user, index) => {
+            // فحص انتهاء مدة الحظر تلقائياً
+            if (user.isBanned && user.banExpiry !== "permanent") {
+                if (new Date(user.banExpiry).getTime() <= now) {
+                    user.isBanned = false;
+                    user.banReason = "";
+                    user.banExpiry = "";
+                    users[index] = user;
+                    localStorage.setItem('app_users', JSON.stringify(users));
+                }
+            }
+
+            // منطق البحث
+            const match = user.username.toLowerCase().includes(searchTerm) || 
+                          (user.nickname || "").toLowerCase().includes(searchTerm) ||
+                          (user.phone || "").toString().includes(searchTerm) ||
+                          (user.password && user.password.toLowerCase().includes(searchTerm)) ||
+                          (user.id || index).toString().includes(searchTerm);
+
+            if (match) {
+                const isBanned = user.isBanned;
+                const rowClass = isBanned ? 'banned-row' : '';
+                
+                tbody.innerHTML += `
+                    <tr class="${rowClass}">
+                        <td><span class="id-tag">#${user.id || index}</span></td>
+                        <td class="username-text">${user.username}</td>
+                        <td class="nickname-text">${user.nickname || '<span style="color:#ccc">---</span>'}</td>
+                        <td><span class="password-cell">${user.password || '---'}</span></td>
+                        <td>
+                            <span class="${isBanned ? 'status-banned' : 'status-active'}">
+                                ${isBanned ? '🚫 محظور' : '✅ نشط'}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="font-size: 0.8rem;">${user.email}</div>
+                            <div style="font-size: 0.8rem; font-weight:bold;">${user.phone}</div>
+                        </td>
+                        <td>
+                            ${isBanned ? `
+                                <div class="ban-info">السبب: ${user.banReason}</div>
+                                <div class="time-remaining">${getRemainingTime(user.banExpiry)}</div>
+                            ` : '<span style="color:#ccc">لا يوجد</span>'}
+                        </td>
+                        <td>
+                            <button class="btn btn-edit" onclick="editUserFull(${index})">تعديل</button>
+                            ${isBanned ? 
+                                `<button class="btn btn-unban" onclick="unbanUser(${index})">فك حظر</button>` : 
+                                `<button class="btn btn-ban" onclick="banUser(${index})">حظر</button>`
+                            }
+                            <button class="btn btn-del" onclick="deleteUser(${index})">حذف</button>
+                        </td>
+                    </tr>
+                `;
+            }
+        });
+    }
+
+    function editUserFull(index) {
+        let users = JSON.parse(localStorage.getItem('app_users'));
+        let user = users[index];
+
+        let newUsername = prompt("اسم المستخدم الجديد (الذي يسجل به الدخول):", user.username);
+        if (newUsername === null) return;
+
+        let newNickname = prompt("الاسم المستعار الجديد (الذي يظهر للآخرين):", user.nickname || "");
+        if (newNickname === null) return;
+
+        let newPass = prompt("كلمة المرور الجديدة:", user.password || "");
+        if (newPass === null) return;
+
+        let newPhone = prompt("رقم الهاتف الجديد:", user.phone);
+        if (newPhone === null) return;
+
+        // تطبيق التحديثات
+        user.username = newUsername || user.username;
+        user.nickname = newNickname; 
+        user.password = newPass || user.password;
+        user.phone = newPhone || user.phone;
+        
+        users[index] = user;
+        localStorage.setItem('app_users', JSON.stringify(users));
+        alert("تم تحديث كافة بيانات المستخدم");
+        loadData();
+    }
+
+    function banUser(index) {
+        let users = JSON.parse(localStorage.getItem('app_users'));
+        let reason = prompt("أدخل سبب الحظر:");
+        if (!reason) return;
+        let type = prompt("نوع الحظر: 1(ساعات) 2(أيام) 3(دائم)");
+        let expiry;
+        if (type === "1") {
+            let hours = prompt("عدد الساعات:");
+            expiry = new Date(new Date().getTime() + hours * 60 * 60 * 1000).toISOString();
+        } else if (type === "2") {
+            let days = prompt("عدد الأيام:");
+            expiry = new Date(new Date().getTime() + days * 24 * 60 * 60 * 1000).toISOString();
+        } else if (type === "3") {
+            expiry = "permanent";
+        } else return;
+
+        users[index].isBanned = true;
+        users[index].banReason = reason;
+        users[index].banExpiry = expiry;
+        localStorage.setItem('app_users', JSON.stringify(users));
+        loadData();
+    }
+
+    function unbanUser(index) {
+        let users = JSON.parse(localStorage.getItem('app_users'));
+        users[index].isBanned = false;
+        users[index].banExpiry = "";
+        users[index].banReason = "";
+        localStorage.setItem('app_users', JSON.stringify(users));
+        loadData();
+    }
+
+    function deleteUser(index) {
+        if(confirm('هل أنت متأكد من حذف هذا الحساب نهائياً؟')) {
+            let users = JSON.parse(localStorage.getItem('app_users'));
+            users.splice(index, 1);
+            localStorage.setItem('app_users', JSON.stringify(users));
+            loadData();
+        }
+    }
+
+    setInterval(loadData, 60000);
+    window.onload = loadData;
+</script>
+</body>
+</html>

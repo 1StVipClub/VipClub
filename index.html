@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VipClub - الصفحة الرئيسية</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* إعدادات عامة */
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column;
+            min-height: 100vh;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        /* --- تنسيق الهيدر الرئيسي --- */
+        header {
+            background-color: #1a1a1a;
+            color: white; padding: 1rem 5%;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        /* --- تنسيق شريط الأقسام --- */
+        .sub-nav {
+            background-color: #2a2a2a;
+            border-bottom: 2px solid #ffd700;
+            padding: 10px 0;
+            position: sticky;
+            top: 70px; 
+            z-index: 999;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+        }
+        .sub-nav::-webkit-scrollbar { display: none; }
+
+        .sub-nav ul {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            margin: 0;
+            padding: 0 20px;
+            gap: 20px;
+        }
+
+        .sub-nav a {
+            color: #ddd;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+
+        .sub-nav a:hover { color: #ffd700; }
+
+        .logo-container {
+            display: flex; align-items: center; gap: 15px;
+            width: 100%; justify-content: space-between;
+        }
+
+        header .logo {
+            font-size: 1.8rem; font-weight: bold;
+            color: #ffd700; text-transform: uppercase;
+            letter-spacing: 1px; cursor: pointer;
+        }
+
+        .icon-wrapper { 
+            display: flex; align-items: center; gap: 12px; 
+            position: relative; 
+        }
+
+        .header-icon {
+            font-size: 1.3rem; color: white; cursor: pointer;
+            transition: 0.3s; background: rgba(255, 255, 255, 0.1);
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; position: relative;
+            text-decoration: none;
+        }
+
+        .header-icon:hover {
+            color: #ffd700; background: rgba(255, 215, 0, 0.2);
+        }
+
+        .badge {
+            position: absolute; top: -2px; right: -2px;
+            background: #ff4757; color: white;
+            font-size: 0.65rem; padding: 2px 6px;
+            border-radius: 50%; border: 2px solid #1a1a1a;
+        }
+
+        .notif-dropdown {
+            position: absolute;
+            top: 55px; left: 0; 
+            width: 320px; max-width: 85vw;
+            background: #222; color: white;
+            border-radius: 12px; border: 1px solid #444;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            display: none; flex-direction: column;
+            z-index: 1001; overflow: hidden;
+        }
+
+        .notif-dropdown.active { display: flex; animation: slideDown 0.3s ease-out; }
+
+        .notif-header { 
+            padding: 12px 15px; background: #2a2a2a; 
+            display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: 1px solid #444;
+        }
+
+        #notifList { max-height: 350px; overflow-y: auto; }
+
+        .notif-item { 
+            padding: 12px; border-bottom: 1px solid #333; 
+            font-size: 0.85rem; display: flex; 
+            justify-content: space-between; align-items: center; 
+            gap: 10px; transition: 0.2s; 
+        }
+        .notif-item.unread { background: #2d2d2d; border-right: 4px solid #ffd700; }
+        .notif-item:hover { background: #333; }
+
+        .delete-notif { color: #777; cursor: pointer; padding: 5px; transition: 0.3s; }
+        .delete-notif:hover { color: #ff4757; transform: scale(1.1); }
+
+        /* تنسيق أيقونة التحديث */
+        .refresh-icon:active { transform: rotate(180deg); }
+
+        @keyframes slideDown { 
+            from { opacity: 0; transform: translateY(-10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        main { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 50px 20px; }
+        main h1 { font-size: 2.5rem; margin-bottom: 10px; color: #1a1a1a; }
+        main p { font-size: 1.1rem; color: #666; max-width: 600px; }
+
+        .floating-support { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background: #6366f1; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; box-shadow: 0 5px 20px rgba(99, 102, 241, 0.4); cursor: pointer; z-index: 9999; transition: 0.3s; }
+        .pulse-dot { position: absolute; top: 2px; right: 2px; width: 14px; height: 14px; background: #ff4757; border: 2px solid white; border-radius: 50%; animation: pulse-ring 2s infinite; }
+        
+        footer { background-color: #1a1a1a; color: #ffffff; text-align: center; padding: 20px 0; border-top: 3px solid #ffd700; }
+
+        @keyframes pulse-ring { 0% { transform: scale(0.33); } 80%, 100% { opacity: 0; } }
+
+        @media (max-width: 600px) {
+            header { padding: 0.8rem 1rem; }
+            .sub-nav ul { justify-content: flex-start; }
+            .notif-dropdown { left: -20px; width: 290px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <div class="logo" onclick="location.reload()">💎👑VipClub👑💎</div>
+
+            <div class="icon-wrapper">
+                <div class="header-icon" onclick="handleProfileClick()" title="الملف الشخصي">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                
+                <div class="header-icon" onclick="handleSettingsClick()" title="الإعدادات">
+                    <i class="fas fa-cog"></i>
+                </div>
+
+                <div class="header-icon" onclick="toggleNotifs()" title="الإشعارات">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge" id="notifBadge" style="display:none;">0</span>
+                </div>
+
+                <div id="notifDropdown" class="notif-dropdown">
+                    <div class="notif-header">
+                        <span style="font-weight:bold; color: #ffd700;">الإشعارات</span>
+                        <div style="display:flex; gap:12px; font-size:0.75rem; align-items: center;">
+                            <i class="fas fa-sync-alt refresh-icon" onclick="refreshNotifs()" title="تحديث" style="cursor:pointer; color:#ffd700;"></i>
+                            
+                            <span onclick="markAllRead()" style="cursor:pointer; color:#eee;">قراءة الكل</span>
+                            <span onclick="deleteAllNotifs()" style="cursor:pointer; color:#ff4757;">حذف الكل</span>
+                        </div>
+                    </div>
+                    <div id="notifList">
+                        <div style="padding:20px; text-align:center; color:#888;">لا توجد إشعارات</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <nav class="sub-nav">
+        <ul>
+            <li><a href="home.html">Binance Red Packets</a></li>
+            <li><a href="MarketPlace.html">Games Accounts</a></li>
+            <li><a href="ChargGames.html">Charg Games</a></li>
+            
+        </ul>
+    </nav>
+
+    <main>
+        <h1 id="welcomeMsg">مرحباً بكم في VipClub</h1>
+        <p>استمتع بتجربة حصرية وخدمات متميزة مصممة خصيصاً لك.</p>
+    </main>
+
+    <div onclick="handleSupportClick()" class="floating-support">
+        <i class="fas fa-headset"></i>
+        <span class="pulse-dot"></span>
+    </div>
+
+    <footer>
+        &copy; جميع حقوق الطبع والنشر محفوظة 2026 VipClub
+    </footer>
+
+    <script>
+        // --- دالة التحقق من الحظر ---
+        function checkBanStatus() {
+            const sessionUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!sessionUser) return;
+
+            const allUsers = JSON.parse(localStorage.getItem('app_users')) || [];
+            const user = allUsers.find(u => u.id === sessionUser.id);
+
+            if (user && user.isBanned) {
+                const now = new Date().getTime();
+                if (user.banExpiry !== "permanent" && new Date(user.banExpiry).getTime() <= now) {
+                    user.isBanned = false;
+                    localStorage.setItem('app_users', JSON.stringify(allUsers));
+                    return; 
+                }
+
+                let msg = `عذراً، حسابك محظور حالياً.\nالسبب: ${user.banReason || 'غير محدد'}`;
+                if (user.banExpiry === "permanent") {
+                    msg += `\nمدة الحظر: دائم`;
+                } else {
+                    msg += `\nينتهي في: ${new Date(user.banExpiry).toLocaleString('ar-EG')}`;
+                }
+
+                alert(msg);
+                localStorage.removeItem('currentUser');
+                window.location.href = 'Login2.html';
+            }
+        }
+
+        function checkLogin() { return localStorage.getItem('currentUser') !== null; }
+
+        function handleSettingsClick() {
+            if (checkLogin()) { window.location.href = 'settings.html'; } 
+            else { alert("يرجى تسجيل الدخول أولاً للوصول للإعدادات"); window.location.href = 'Login2.html'; }
+        }
+
+        function toggleNotifs() {
+            if (!checkLogin()) { alert("يرجى تسجيل الدخول أولاً"); return; }
+            const dropdown = document.getElementById('notifDropdown');
+            dropdown.classList.toggle('active');
+            updateUI(); 
+        }
+
+        // --- دالة تحديث الإشعارات (الجديدة) ---
+        function refreshNotifs() {
+            const refreshBtn = document.querySelector('.refresh-icon');
+            // تأثير حركة دوران
+            refreshBtn.style.transition = "transform 0.6s ease";
+            refreshBtn.style.transform = "rotate(360deg)";
+            
+            updateUI(); // استدعاء تحديث البيانات الأصلي
+            
+            setTimeout(() => {
+                refreshBtn.style.transition = "none";
+                refreshBtn.style.transform = "rotate(0deg)";
+            }, 600);
+        }
+
+        function updateUI() {
+            checkBanStatus();
+
+            const sessionUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!sessionUser) return;
+            const allUsers = JSON.parse(localStorage.getItem('app_users')) || [];
+            const user = allUsers.find(u => u.id === sessionUser.id);
+            if (!user) return;
+
+            document.getElementById('welcomeMsg').innerText = `مرحباً، ${user.nickname || user.username}`;
+
+            const notifs = user.notifications || [];
+            const unreadCount = notifs.filter(n => !n.read).length;
+
+            const badge = document.getElementById('notifBadge');
+            if (unreadCount > 0) {
+                badge.innerText = unreadCount;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+
+            const list = document.getElementById('notifList');
+            if (notifs.length === 0) {
+                list.innerHTML = '<div style="padding:20px; text-align:center; color:#888;">لا توجد إشعارات</div>';
+            } else {
+                list.innerHTML = '';
+                [...notifs].reverse().forEach(n => {
+                    const item = document.createElement('div');
+                    item.className = `notif-item ${!n.read ? 'unread' : ''}`;
+                    item.innerHTML = `
+                        <div style="flex:1;">
+                            <div style="margin-bottom: 2px;">${n.text}</div>
+                            <small style="color:#aaa; font-size:0.7rem;">${n.date}</small>
+                        </div>
+                        <i class="fas fa-trash-alt delete-notif" onclick="event.stopPropagation(); deleteNotif(${n.id})"></i>
+                    `;
+                    item.onclick = () => markAsRead(n.id);
+                    list.appendChild(item);
+                });
+            }
+        }
+
+        function markAsRead(id) {
+            let allUsers = JSON.parse(localStorage.getItem('app_users')) || [];
+            const sessionUser = JSON.parse(localStorage.getItem('currentUser'));
+            let idx = allUsers.findIndex(u => u.id === sessionUser.id);
+            if (idx !== -1) {
+                let nIdx = allUsers[idx].notifications.findIndex(n => n.id === id);
+                if(nIdx !== -1) allUsers[idx].notifications[nIdx].read = true;
+                localStorage.setItem('app_users', JSON.stringify(allUsers));
+                updateUI();
+            }
+        }
+
+        function markAllRead() {
+            let allUsers = JSON.parse(localStorage.getItem('app_users')) || [];
+            const sessionUser = JSON.parse(localStorage.getItem('currentUser'));
+            if(!sessionUser) return;
+            let idx = allUsers.findIndex(u => u.id === sessionUser.id);
+            if (idx !== -1) {
+                allUsers[idx].notifications.forEach(n => n.read = true);
+                localStorage.setItem('app_users', JSON.stringify(allUsers));
+                updateUI();
+            }
+        }
+
+        function deleteNotif(id) {
+            let allUsers = JSON.parse(localStorage.getItem('app_users')) || [];
+            const sessionUser = JSON.parse(localStorage.getItem('currentUser'));
+            if(!sessionUser) return;
+            let idx = allUsers.findIndex(u => u.id === sessionUser.id);
+            if (idx !== -1) {
+                allUsers[idx].notifications = allUsers[idx].notifications.filter(n => n.id !== id);
+                localStorage.setItem('app_users', JSON.stringify(allUsers));
+                updateUI();
+            }
+        }
+
+        function deleteAllNotifs() {
+            if(!confirm("حذف جميع الإشعارات؟")) return;
+            let allUsers = JSON.parse(localStorage.getItem('app_users')) || [];
+            const sessionUser = JSON.parse(localStorage.getItem('currentUser'));
+            if(!sessionUser) return;
+            let idx = allUsers.findIndex(u => u.id === sessionUser.id);
+            if (idx !== -1) {
+                allUsers[idx].notifications = [];
+                localStorage.setItem('app_users', JSON.stringify(allUsers));
+                updateUI();
+            }
+        }
+
+        function handleProfileClick() { window.location.href = checkLogin() ? 'profile.html' : 'Login2.html'; }
+        function handleSupportClick() { window.location.href = checkLogin() ? 'supportindex.html' : 'Login2.html'; }
+
+        window.onclick = function(event) {
+            if (!event.target.closest('.icon-wrapper')) {
+                document.getElementById('notifDropdown').classList.remove('active');
+            }
+        }
+
+        window.onload = () => {
+            checkBanStatus();
+            updateUI();
+        };
+        
+        setInterval(checkBanStatus, 10000);
+    </script>
+</body>
+</html>

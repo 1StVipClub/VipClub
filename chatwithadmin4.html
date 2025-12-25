@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الدعم الفني - VipClub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --chat-bg: #e5ddd5;
+            --user-msg: #dcf8c6;
+            --admin-msg: #ffffff;
+            --primary: #6366f1;
+            --dark: #1e293b;
+        }
+
+        body, html { 
+            height: 100%; margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5;
+            background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='50%25' y='50%25' font-size='18' fill='rgba(99, 102, 241, 0.12)' font-family='Arial, sans-serif' font-weight='bold' text-anchor='middle' transform='rotate(-30, 100, 100)'%3EVipClub%3C/text%3E%3C/svg%3E");
+            background-repeat: repeat; background-attachment: fixed;
+        }
+
+        .chat-container { display: flex; flex-direction: column; height: 100vh; max-width: 550px; margin: 0 auto; background: var(--chat-bg); position: relative; box-shadow: 0 0 25px rgba(0,0,0,0.15); }
+
+        .chat-header { background: var(--primary); color: white; padding: 12px 15px; display: flex; flex-direction: column; gap: 10px; z-index: 10; }
+        .header-main { display: flex; align-items: center; justify-content: space-between; }
+        .header-actions { display: flex; gap: 12px; align-items: center; }
+        
+        .esc-container { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        
+        .action-btn { background: rgba(255,255,255,0.25); border: none; color: white; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: 0.3s; }
+        .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        
+        #escTimer { font-size: 0.75rem; font-weight: bold; color: #fff; background: #e74c3c; padding: 2px 10px; border-radius: 10px; min-width: 45px; text-align: center; }
+
+        .messages-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); }
+
+        .msg-wrapper { display: flex; align-items: center; gap: 8px; max-width: 90%; position: relative; margin-bottom: 5px; }
+        .user-wrap { align-self: flex-end; flex-direction: row; }
+        .admin-wrap { align-self: flex-start; }
+
+        .message { padding: 10px 14px; border-radius: 12px; font-size: 0.95rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: relative; z-index: 2; word-wrap: break-word; min-width: 80px; }
+        .msg-user { background: var(--user-msg); border-top-left-radius: 12px; border-top-right-radius: 0; }
+        .msg-admin { background: var(--admin-msg); border-top-left-radius: 0; }
+        
+        .msg-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; gap: 10px; }
+        .msg-time { font-size: 0.65rem; color: #888; white-space: nowrap; }
+        .msg-status-tag { font-size: 0.65rem; color: #666; font-style: italic; }
+        .read-icon { color: #34b7f1; font-size: 0.75rem; }
+
+        .dots-btn { color: #999; cursor: pointer; padding: 5px; visibility: hidden; transition: 0.2s; }
+        .msg-wrapper:hover .dots-btn { visibility: visible; }
+
+        .chat-input-area { background: #f0f0f0; padding: 12px; display: flex; align-items: center; gap: 15px; border-top: 1px solid #ddd; }
+        #messageInput { flex: 1; border: none; padding: 12px 18px; border-radius: 25px; outline: none; font-size: 1rem; }
+        
+        .input-btn { 
+            color: #54656f; 
+            font-size: 1.6rem; 
+            cursor: pointer; 
+            transition: transform 0.2s, color 0.2s; 
+        }
+        .input-btn:hover { 
+            transform: scale(1.15); 
+            color: var(--primary); 
+        }
+
+        .emoji-panel { position: absolute; bottom: 80px; left: 10px; right: 10px; background: white; border-radius: 15px; display: none; padding: 15px; grid-template-columns: repeat(7, 1fr); gap: 10px; box-shadow: 0 -5px 25px rgba(0,0,0,0.15); max-height: 200px; overflow-y: auto; z-index: 100; }
+        
+        video { border-radius: 8px; background: #000; }
+        
+        .message span a {
+            color: #007bff;
+            text-decoration: underline;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+
+<audio id="msgSound" src="sounds/allmessages.mp3" preload="auto"></audio>
+
+<div class="chat-container">
+    <div class="chat-header">
+        <div class="header-main">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <a href="ChargGames.html" style="color:white;"><i class="fas fa-arrow-right"></i></a>
+                <b>دعم VipClub المباشر</b>
+            </div>
+            <div class="header-actions">
+                <div class="esc-container">
+                    <div id="escTimer">05:00</div>
+                    <button id="escBtn" class="action-btn" disabled onclick="escalateChat()">تصعيد</button>
+                </div>
+                <button class="action-btn" style="background:#e74c3c;" onclick="confirmEndChat()">إنهاء</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="messages-area" id="messagesArea"></div>
+    <div class="emoji-panel" id="emojiPanel"></div>
+
+    <div class="chat-input-area" id="inputBar">
+        <i class="far fa-smile input-btn" title="إيموجي" onclick="toggleEmoji()"></i>
+        <label for="fileUpload"><i class="fas fa-paperclip input-btn" title="إرفاق ملف أو فيديو"></i></label>
+        <input type="file" id="fileUpload" hidden accept="image/*,video/*,.pdf,.doc,.docx" onchange="handleFileUpload()">
+        <input type="text" id="messageInput" placeholder="اكتب رسالة..." onkeypress="if(event.key==='Enter') sendMessage()">
+        <i class="fas fa-paper-plane input-btn" style="color: var(--primary);" title="إرسال" onclick="sendMessage()"></i>
+    </div>
+</div>
+
+<script>
+    const msgArea = document.getElementById('messagesArea');
+    const msgInput = document.getElementById('messageInput');
+    const msgSound = document.getElementById('msgSound');
+    
+    const currentUser = JSON.parse(localStorage.getItem('currentUser')) || { id: "User_123", nickname: "زائر" };
+    const userId = currentUser.id;
+    const userName = currentUser.nickname || currentUser.username || "مستخدم";
+
+    // --- خاصية المستخدم يكتب الآن ---
+    let typingTimeout;
+    msgInput.addEventListener('input', () => {
+        setTypingStatus(true);
+        
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+            setTypingStatus(false);
+        }, 2000); // تختفي الإشارة بعد ثانيتين من التوقف
+    });
+
+    function setTypingStatus(isTyping) {
+        let status = JSON.parse(localStorage.getItem('app_typing_status')) || {};
+        status[userId] = isTyping;
+        localStorage.setItem('app_typing_status', JSON.stringify(status));
+    }
+    // ----------------------------
+
+    function playNotificationSound() {
+        msgSound.currentTime = 0;
+        msgSound.play().catch(e => console.log("خطأ في تشغيل الصوت: ", e));
+    }
+
+    const emojis = ["😊","😂","❤️","😍","🔥","✅","👍","🙌","🌹","🎉","✨","🤔","😎","😢","🙏","💰","🚀"];
+    const emojiPanel = document.getElementById('emojiPanel');
+    emojis.forEach(e => {
+        let div = document.createElement('div');
+        div.innerText = e;
+        div.style.cursor = 'pointer';
+        div.style.fontSize = '1.3rem';
+        div.onclick = () => { 
+            msgInput.value += e; 
+            msgInput.dispatchEvent(new Event('input')); // لتفعيل حالة "يكتب الآن" عند اختيار إيموجي
+        };
+        emojiPanel.appendChild(div);
+    });
+
+    let timeLeft = 300;
+    const escBtn = document.getElementById('escBtn');
+    const timerDisplay = document.getElementById('escTimer');
+    const counter = setInterval(() => {
+        let min = Math.floor(timeLeft / 60);
+        let sec = timeLeft % 60;
+        timerDisplay.innerText = `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+        if(timeLeft <= 0) { 
+            clearInterval(counter); 
+            escBtn.disabled = false; 
+            timerDisplay.style.background = "#2ecc71"; 
+            timerDisplay.innerText = "متاح"; 
+        }
+        timeLeft--;
+    }, 1000);
+
+    function sendMessage(content = null, type = 'text', sender = 'user', fileName = '') {
+        const text = content || msgInput.value.trim();
+        if(!text && type === 'text') return;
+
+        const msgObj = { 
+            id: Date.now(), 
+            sender: sender, 
+            text: text, 
+            type: type, 
+            fileName: fileName, 
+            time: new Date().toISOString(),
+            isEdited: false,
+            isDeleted: false,
+            isRead: false
+        };
+
+        saveToGlobalDB(msgObj);
+        playNotificationSound();
+        msgInput.value = '';
+        setTypingStatus(false); // إيقاف حالة الكتابة فور الإرسال
+        emojiPanel.style.display = 'none';
+        loadMyMessages();
+    }
+
+    function saveToGlobalDB(msg) {
+        let chats = JSON.parse(localStorage.getItem('app_chats')) || {};
+        if (!chats[userId]) {
+            chats[userId] = { username: userName, isEscalated: false, messages: [] };
+        }
+        chats[userId].messages.push(msg);
+        localStorage.setItem('app_chats', JSON.stringify(chats));
+    }
+
+    function loadMyMessages() {
+        const sessionEnded = localStorage.getItem(`chat_ended_${userId}`);
+        
+        if (sessionEnded === "true") {
+            msgArea.innerHTML = '';
+            renderMsg({ sender: 'admin', text: "مرحباً بك مجدداً! لقد بدأت محادثة جديدة. كيف يمكننا مساعدتك؟", time: new Date().toISOString() });
+            localStorage.removeItem(`chat_ended_${userId}`);
+        } else {
+            const chats = JSON.parse(localStorage.getItem('app_chats')) || {};
+            const myChat = chats[userId];
+            msgArea.innerHTML = '';
+            if (myChat && myChat.messages.length > 0) {
+                myChat.messages.forEach(msg => renderMsg(msg));
+            } else {
+                renderMsg({ sender: 'admin', text: "مرحباً بك في دعم VipClub! كيف يمكننا مساعدتك؟", time: new Date().toISOString() });
+            }
+        }
+        msgArea.scrollTop = msgArea.scrollHeight;
+    }
+
+    function renderMsg(msg) {
+        const wrapper = document.createElement('div');
+        wrapper.className = `msg-wrapper ${msg.sender === 'user' ? 'user-wrap' : 'admin-wrap'}`;
+
+        let contentHTML = "";
+        if (msg.isDeleted) {
+            contentHTML = `<i style="color:#999; font-size:0.9rem;">🚫 تم حذف هذه الرسالة</i>`;
+        } else {
+            if(msg.type === 'image') contentHTML = `<img src="${msg.text}" style="max-width:200px; border-radius:8px;">`;
+            else if(msg.type === 'video') contentHTML = `<video src="${msg.text}" controls style="max-width:280px;"></video>`;
+            else if(msg.type === 'file') contentHTML = `<a href="${msg.text}" download="${msg.fileName}" class="file-msg" style="text-decoration:none; color:var(--primary); font-weight:bold;">📄 ${msg.fileName}</a>`;
+            else {
+                const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+                const linkedText = msg.text.replace(urlPattern, function(url) {
+                    return `<a href="${url}" target="_blank">${url}</a>`;
+                });
+                contentHTML = `<span>${linkedText}</span>`;
+            }
+        }
+
+        const editTag = (msg.isEdited && !msg.isDeleted) ? `<span class="msg-status-tag">(معدلة)</span>` : "";
+        const readIcon = (msg.sender === 'user' && msg.isRead) ? `<i class="fas fa-check-double read-icon"></i>` : "";
+        const dotsBtn = (msg.sender === 'user' && !msg.isDeleted) ? 
+            `<i class="fas fa-ellipsis-v dots-btn" onclick="openMenu(${msg.id})"></i>` : "";
+
+        wrapper.innerHTML = `
+            ${msg.sender === 'user' ? dotsBtn : ''}
+            <div class="message msg-${msg.sender}">
+                ${contentHTML}
+                <div class="msg-footer">
+                    <span class="msg-time">
+                        ${editTag} ${new Date(msg.time).toLocaleTimeString('ar-EG',{hour:'2-digit', minute:'2-digit'})}
+                    </span>
+                    ${readIcon}
+                </div>
+            </div>
+            ${msg.sender === 'admin' ? dotsBtn : ''}
+        `;
+        msgArea.appendChild(wrapper);
+    }
+
+    function openMenu(msgId) {
+        const choice = prompt("اختر إجراء:\n1 - تعديل الرسالة\n2 - حذف الرسالة\nإلغاء (اتركها فارغة)");
+        if (choice === "1") {
+            const currentChats = JSON.parse(localStorage.getItem('app_chats'));
+            const msg = currentChats[userId].messages.find(m => m.id === msgId);
+            if(msg.type !== 'text') return alert("يمكن تعديل النصوص فقط");
+            
+            const newText = prompt("تعديل الرسالة:", msg.text);
+            if (newText && newText !== msg.text) {
+                updateMessageInDB(msgId, { text: newText, isEdited: true });
+            }
+        } else if (choice === "2") {
+            if(confirm("هل تريد حذف هذه الرسالة لدى الجميع؟")) {
+                updateMessageInDB(msgId, { isDeleted: true });
+            }
+        }
+    }
+
+    function updateMessageInDB(msgId, updates) {
+        let chats = JSON.parse(localStorage.getItem('app_chats')) || {};
+        if (chats[userId]) {
+            const index = chats[userId].messages.findIndex(m => m.id === msgId);
+            if (index !== -1) {
+                chats[userId].messages[index] = { ...chats[userId].messages[index], ...updates };
+                localStorage.setItem('app_chats', JSON.stringify(chats));
+                loadMyMessages();
+            }
+        }
+    }
+
+    function escalateChat() {
+        let chats = JSON.parse(localStorage.getItem('app_chats')) || {};
+        if(chats[userId]) {
+            chats[userId].isEscalated = true;
+            chats[userId].messages.push({
+                id: Date.now(),
+                sender: 'admin',
+                text: "⚠️ تم تصعيد محادثتك للإدارة العليا. سيتم الرد عليك بأولوية قصوى.",
+                time: new Date().toISOString()
+            });
+            localStorage.setItem('app_chats', JSON.stringify(chats));
+            playNotificationSound();
+            loadMyMessages();
+            escBtn.disabled = true;
+            alert("تم إرسال طلب تصعيد.");
+        }
+    }
+
+    function handleFileUpload() {
+        const file = document.getElementById('fileUpload').files[0];
+        if(!file) return;
+        if(file.size > 50 * 1024 * 1024) return alert("حجم الملف كبير جداً (الأقصى 50 ميجابايت)");
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            let type = file.type.includes('image') ? 'image' : (file.type.includes('video') ? 'video' : 'file');
+            sendMessage(e.target.result, type, 'user', file.name);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function toggleEmoji() { emojiPanel.style.display = emojiPanel.style.display === 'grid' ? 'none' : 'grid'; }
+
+    function confirmEndChat() {
+        if(confirm("هل تريد إنهاء الجلسة والعودة للرئيسية؟ سيتم حفظ السجل.")) {
+            setTypingStatus(false);
+            sendMessage("🔴 تم إنهاء المحادثة من قبل العميل", 'text', 'admin');
+            localStorage.setItem(`chat_ended_${userId}`, "true");
+            setTimeout(() => {
+                location.href = 'ChargGames.html';
+            }, 500);
+        }
+    }
+
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'app_chats') {
+            const oldLen = (JSON.parse(e.oldValue || '{}')[userId]?.messages.length) || 0;
+            const newLen = (JSON.parse(e.newValue || '{}')[userId]?.messages.length) || 0;
+            if(newLen > oldLen) playNotificationSound();
+            loadMyMessages();
+        }
+    });
+
+    window.onload = loadMyMessages;
+</script>
+
+</body>
+</html>

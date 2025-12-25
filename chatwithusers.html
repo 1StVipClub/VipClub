@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المحادثات الاحترافية - VipClub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"></script>
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --dark: #0f172a;
+            --bg: #f1f5f9;
+            --accent: #4f46e5;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+
+        .users-sidebar {
+            width: 380px; background: white; border-left: 1px solid #e2e8f0;
+            display: flex; flex-direction: column; z-index: 100; position: relative;
+        }
+
+        .sidebar-header { padding: 15px; background: var(--dark); color: white; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* تصميم شريط البحث في القائمة الجانبية */
+        .sidebar-search-wrap { padding: 10px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+        .search-input-inner {
+            display: flex; align-items: center; background: white; border: 1px solid #ddd; border-radius: 8px; padding: 5px 10px;
+        }
+        .search-input-inner input { border: none; outline: none; width: 100%; padding: 5px; font-size: 0.9rem; }
+        .search-input-inner i { color: #94a3b8; }
+
+        .sidebar-refresh-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .sidebar-refresh-btn:hover { background: var(--primary); transform: rotate(180deg); }
+        .rotate-anim { animation: spin 0.6s ease-in-out; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .sidebar-tabs { display: flex; background: #1e293b; border-bottom: 1px solid #334155; }
+        .tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; font-size: 0.8rem; transition: 0.3s; color: #94a3b8; position: relative; }
+        .tab.active { background: var(--primary); color: white; }
+
+        .user-list { flex: 1; overflow-y: auto; }
+        .user-item {
+            padding: 15px; border-bottom: 1px solid #f1f5f9; cursor: pointer;
+            display: flex; flex-direction: column; position: relative; transition: 0.2s;
+        }
+        .user-item:hover { background: #f8fafc; }
+        .user-item.active { background: #eef2ff; border-right: 4px solid var(--primary); }
+        .user-item.escalated { background: #fff1f2; border-right: 4px solid var(--danger); }
+
+        .user-nickname {
+            color: var(--accent);
+            font-size: 1rem;
+            font-weight: 800;
+            margin-right: 8px;
+        }
+
+        .user-id-tag { 
+            font-size: 0.85rem; 
+            background: #e2e8f0; 
+            color: #1e293b; 
+            padding: 4px 8px; 
+            border-radius: 6px; 
+            margin-right: 5px; 
+            font-family: monospace; 
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .copy-id-btn {
+            cursor: pointer;
+            color: var(--primary);
+            transition: 0.2s;
+            font-size: 0.8rem;
+        }
+        .copy-id-btn:hover {
+            color: var(--dark);
+            transform: scale(1.1);
+        }
+
+        .unread-badge { background: var(--danger); color: white; font-size: 0.7rem; min-width: 18px; height: 18px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 0 5px; font-weight: bold; }
+
+        .item-actions { position: absolute; left: 10px; top: 15px; display: flex; gap: 5px; opacity: 0; transition: 0.3s; z-index: 5; }
+        .user-item:hover .item-actions { opacity: 1; }
+        .action-icon { font-size: 0.8rem; padding: 6px; border-radius: 4px; background: #eee; color: #666; transition: 0.2s; }
+        .action-icon:hover { background: var(--primary); color: white; }
+
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: #e5ddd5; position: relative; }
+        
+        .chat-header {
+            padding: 10px 20px; background: white; border-bottom: 1px solid #e2e8f0;
+            display: flex; justify-content: space-between; align-items: center;
+            height: auto; min-height: 65px; box-sizing: border-box; flex-wrap: wrap; gap: 10px;
+        }
+
+        /* تنسيق شريط البحث داخل الشات */
+        .chat-search-box {
+            display: flex; align-items: center; background: #f1f5f9; border-radius: 20px; padding: 5px 15px; gap: 8px; border: 1px solid #e2e8f0;
+        }
+        .chat-search-box input { border: none; background: transparent; outline: none; font-size: 0.85rem; width: 120px; transition: 0.3s; }
+        .chat-search-box input:focus { width: 200px; }
+
+        .header-btns { display: flex; gap: 8px; }
+        .btn { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: bold; transition: 0.3s; }
+        .btn-end { background: var(--warning); color: #000; }
+        .btn-delete-mine { background: #64748b; color: white; }
+        .btn-delete-all { background: var(--danger); color: white; }
+        .btn-refresh { background: var(--success); color: white; }
+
+        .chat-messages {
+            flex: 1; padding: 20px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 15px;
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+        }
+
+        /* تظليل الكلمات المبحوث عنها */
+        .highlight { background: yellow; color: black; font-weight: bold; border-radius: 2px; }
+
+        .msg-row { display: flex; align-items: center; width: 100%; gap: 8px; position: relative; }
+        .msg-row.admin { justify-content: flex-start; flex-direction: row-reverse; }
+        .msg-row.user { justify-content: flex-start; flex-direction: row; }
+
+        .msg { max-width: 65%; padding: 10px 15px; border-radius: 12px; font-size: 0.9rem; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .msg.admin { background: #dcf8c6; border-top-right-radius: 0; }
+        .msg.user { background: white; border-top-left-radius: 0; }
+        
+        .msg-options-trigger {
+            cursor: pointer; color: #999; padding: 10px 15px; font-size: 1.6rem; 
+            transition: 0.2s; display: flex; align-items: center; justify-content: center;
+            line-height: 1;
+        }
+        .msg-options-trigger:hover { color: var(--primary); background: rgba(0,0,0,0.05); border-radius: 50%; }
+
+        .msg-popover {
+            position: absolute; bottom: 110%; background: #334155; border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: none; z-index: 1000;
+            padding: 5px 10px; flex-direction: row; gap: 5px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .msg-row.admin .msg-popover { left: 0; }
+        .msg-row.user .msg-popover { right: 0; }
+        
+        .popover-item {
+            padding: 6px; border-radius: 50%; width: 30px; height: 30px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.2s; color: white; font-size: 0.85rem;
+        }
+        .popover-item:hover { background: var(--primary); }
+        .popover-item.danger:hover { background: var(--danger); }
+
+        .msg img, .msg video { max-width: 100%; border-radius: 8px; margin-top: 5px; display: block; }
+        
+        .file-attachment {
+            display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.05);
+            padding: 10px; border-radius: 8px; text-decoration: none; color: inherit;
+            border: 1px dashed #ccc; transition: 0.2s;
+        }
+        .file-attachment:hover { background: rgba(0,0,0,0.1); }
+
+        .msg-status-tag { font-size: 0.6rem; color: #888; font-style: italic; display: block; margin-top: 2px; }
+        .read-check { color: #34b7f1; font-size: 0.7rem; margin-right: 3px; }
+
+        .chat-input-wrap {
+            padding: 15px; background: #f0f0f0; border-top: 1px solid #ddd;
+            display: flex; gap: 10px; align-items: center; position: relative;
+        }
+        #adminInput { flex: 1; padding: 12px 18px; border: 1px solid #ccc; border-radius: 25px; outline: none; }
+
+        .emoji-btn, .attach-btn {
+            background: none; border: none; font-size: 1.4rem; color: #64748b; cursor: pointer; transition: 0.2s;
+        }
+        .emoji-btn:hover { color: var(--warning); transform: scale(1.1); }
+        .attach-btn:hover { color: var(--primary); transform: scale(1.1); }
+        #fileInput { display: none; }
+
+        #emojiPickerContainer {
+            position: absolute; bottom: 80px; left: 20px; z-index: 2000; display: none;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2); border-radius: 10px;
+        }
+
+        .empty-state {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100%; color: #94a3b8; background: white;
+        }
+        
+        .hidden-notice {
+            display: flex; height: 100%; align-items: center; justify-content: center;
+            color: #64748b; font-style: italic; font-size: 1rem; text-align: center;
+            padding: 20px;
+        }
+
+        .typing-indicator { color: var(--primary); font-weight: bold; font-style: italic; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body onclick="closeAllPopovers(); closeEmojiPicker();">
+
+    <audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" preload="auto"></audio>
+
+    <div class="users-sidebar">
+        <div class="sidebar-header">
+            <h4 style="margin:0"><i class="fas fa-shield-alt"></i> لوحة تحكم VipClub</h4>
+            <button class="sidebar-refresh-btn" onclick="refreshSidebar(this)" title="تحديث القائمة">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+
+        <div class="sidebar-search-wrap">
+            <div class="search-input-inner">
+                <i class="fas fa-search"></i>
+                <input type="text" id="sidebarSearchInput" placeholder="بحث باسم، ID، أو محتوى رسالة..." oninput="loadRealChats()">
+            </div>
+        </div>
+
+        <div class="sidebar-tabs">
+            <div class="tab active" id="tabActive" onclick="switchTab('active')">المحادثات النشطة</div>
+            <div class="tab" id="tabArchived" onclick="switchTab('archived')">الأرشيف <span id="archCount"></span></div>
+        </div>
+        <div class="user-list" id="userList"></div>
+    </div>
+
+    <div class="chat-area">
+        <div id="chatContent" style="display: none; flex-direction: column; height: 100%;">
+            <div class="chat-header">
+                <div>
+                    <strong id="currentUserName" style="color: var(--accent); font-size: 1.2rem;">--</strong>
+                    <span id="currentUserDisplayId" style="font-size: 0.7rem; color: #64748b; margin-right: 10px;"></span>
+                    <div id="statusIndicator" style="font-size: 0.7rem; color: #10b981;">● نشط الآن</div>
+                </div>
+
+                <div class="chat-search-box">
+                    <i class="fas fa-search" style="font-size: 0.8rem; color: #94a3b8;"></i>
+                    <input type="text" id="chatSearchInput" placeholder="بحث في المحادثة..." oninput="handleChatSearch()">
+                </div>
+
+                <div class="header-btns">
+                    <button class="btn btn-refresh" onclick="loadRealChats()" title="تحديث يدوي"><i class="fas fa-sync-alt"></i></button>
+                    <button class="btn btn-end" onclick="endChatOfficial()">إنهاء المحادثة</button>
+                    <button class="btn btn-delete-mine" onclick="deleteForMe()">حذف سجلي</button>
+                    <button class="btn btn-delete-all" onclick="deleteFullConversation()">حذف نهائي</button>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages"></div>
+
+            <div class="chat-input-wrap">
+                <div id="emojiPickerContainer" onclick="event.stopPropagation()"></div>
+                
+                <button class="emoji-btn" onclick="toggleEmojiPicker(event)">
+                    <i class="far fa-smile"></i>
+                </button>
+
+                <button class="attach-btn" onclick="document.getElementById('fileInput').click()" title="إرفاق ملف">
+                    <i class="fas fa-paperclip"></i>
+                </button>
+                <input type="file" id="fileInput" onchange="handleFileUpload(this)" accept="image/*,video/*,.pdf,.doc,.docx,.txt">
+
+                <input type="text" id="adminInput" placeholder="اكتب ردك هنا..." onkeypress="if(event.key==='Enter') sendReply()">
+                
+                <button onclick="sendReply()" style="background:var(--primary); color:white; border:none; border-radius:50%; width:42px; height:42px; cursor:pointer;">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="empty-state" id="emptyState">
+            <i class="fas fa-headset fa-5x" style="margin-bottom: 20px; opacity: 0.2;"></i>
+            <p>اختر عميلاً لبدء المساعدة</p>
+        </div>
+    </div>
+
+<script>
+    let activeUserId = null;
+    let currentTab = 'active';
+    let lastKnownMessagesCount = 0;
+    let isDisplayHidden = false;
+    let editingMsgId = null;
+
+    // تهيئة مكتبة الإيموجي
+    const pickerOptions = { 
+        onEmojiSelect: (emoji) => {
+            const input = document.getElementById('adminInput');
+            input.value += emoji.native;
+            input.focus();
+        },
+        locale: 'ar',
+        theme: 'light',
+        set: 'apple'
+    }
+    const picker = new EmojiMart.Picker(pickerOptions);
+    document.getElementById('emojiPickerContainer').appendChild(picker);
+
+    function toggleEmojiPicker(e) {
+        e.stopPropagation();
+        const container = document.getElementById('emojiPickerContainer');
+        container.style.display = container.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function closeEmojiPicker() {
+        document.getElementById('emojiPickerContainer').style.display = 'none';
+    }
+
+    function handleFileUpload(input) {
+        const file = input.files[0];
+        if (!file || !activeUserId) return;
+        if (file.size > 2 * 1024 * 1024) {
+            alert("حجم الملف كبير جداً. يرجى اختيار ملف أقل من 2 ميجابايت.");
+            return;
+        }
+        const reader = new FileReader();
+        let fileType = 'file';
+        if (file.type.startsWith('image/')) fileType = 'image';
+        else if (file.type.startsWith('video/')) fileType = 'video';
+        reader.onload = function(e) {
+            const fileData = e.target.result;
+            saveMessageToGlobal('admin', fileData, fileType, file.name);
+            input.value = ''; 
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function refreshSidebar(btn) {
+        const icon = btn.querySelector('i');
+        icon.classList.add('rotate-anim');
+        loadRealChats();
+        setTimeout(() => { icon.classList.remove('rotate-anim'); }, 600);
+    }
+
+    function markUserMessagesAsRead(userId) {
+        let chats = JSON.parse(localStorage.getItem('app_chats')) || {};
+        if (chats[userId]) {
+            let changed = false;
+            chats[userId].messages.forEach(m => {
+                if (m.sender === 'user' && !m.isRead) {
+                    m.isRead = true;
+                    changed = true;
+                }
+            });
+            if (changed) localStorage.setItem('app_chats', JSON.stringify(chats));
+        }
+    }
+
+    function getReadStatus() {
+        return JSON.parse(localStorage.getItem('app_read_status')) || {};
+    }
+
+    function setReadStatus(userId) {
+        let status = getReadStatus();
+        status[userId] = new Date().toISOString();
+        localStorage.setItem('app_read_status', JSON.stringify(status));
+        markUserMessagesAsRead(userId);
+    }
+
+    function copyToClipboard(text, event) {
+        event.stopPropagation();
+        navigator.clipboard.writeText(text).then(() => {
+            const icon = event.target;
+            const originalClass = icon.className;
+            icon.className = 'fas fa-check';
+            icon.style.color = 'var(--success)';
+            setTimeout(() => {
+                icon.className = originalClass;
+                icon.style.color = '';
+            }, 1500);
+        });
+    }
+
+    // وظيفة البحث داخل الشات
+    function handleChatSearch() {
+        const chats = JSON.parse(localStorage.getItem('app_chats')) || {};
+        if (activeUserId && chats[activeUserId]) {
+            renderMessages(chats[activeUserId].messages);
+        }
+    }
+
+    function loadRealChats() {
+        const userListDiv = document.getElementById('userList');
+        const chats = JSON.parse(localStorage.getItem('app_chats')) || {};
+        const typingStatus = JSON.parse(localStorage.getItem('app_typing_status')) || {};
+        const searchKeyword = document.getElementById('sidebarSearchInput').value.toLowerCase().trim();
+        const archCountSpan = document.getElementById('archCount');
+        
+        userListDiv.innerHTML = '';
+        let userIds = Object.keys(chats);
+
+        let archivedIds = userIds.filter(id => chats[id].isArchived);
+        archCountSpan.innerText = archivedIds.length > 0 ? `(${archivedIds.length})` : '';
+
+        let filteredIds = userIds.filter(id => {
+            const chat = chats[id];
+            
+            // فلترة التاب (أرشيف أو نشط)
+            const tabMatch = (currentTab === 'archived') ? chat.isArchived : (!chat.isArchived && !chat.isHidden);
+            if (!tabMatch) return false;
+
+            // فلترة البحث (اسم، معرف، أو كلام في المحادثة)
+            if (searchKeyword === "") return true;
+            
+            const nameMatch = chat.username.toLowerCase().includes(searchKeyword);
+            const idMatch = id.toLowerCase().includes(searchKeyword);
+            const contentMatch = chat.messages.some(m => m.text && typeof m.text === 'string' && m.text.toLowerCase().includes(searchKeyword));
+            
+            return nameMatch || idMatch || contentMatch;
+        });
+
+        filteredIds.sort((a, b) => {
+            const tA = new Date(chats[a].messages[chats[a].messages.length - 1]?.time || 0);
+            const tB = new Date(chats[b].messages[chats[b].messages.length - 1]?.time || 0);
+            return tB - tA;
+        });
+
+        filteredIds.forEach(userId => {
+            const chatData = chats[userId];
+            const messages = chatData.messages;
+            const lastMsg = messages[messages.length - 1];
+            const unreadCount = messages.filter(m => m.sender === 'user' && !m.isRead).length;
+            const isTyping = typingStatus[userId] === true;
+
+            let lastMsgPrefix = "";
+            if (lastMsg) {
+                lastMsgPrefix = lastMsg.sender === 'admin' ? "أنت: " : `${chatData.username}: `;
+            }
+
+            const userItem = document.createElement('div');
+            userItem.className = `user-item ${chatData.isEscalated ? 'escalated' : ''} ${activeUserId === userId ? 'active' : ''}`;
+            userItem.onclick = () => openChat(userId);
+
+            userItem.innerHTML = `
+                <div class="item-actions">
+                    <i class="fas fa-archive action-icon" title="أرشفة/إخراج" onclick="toggleArchive('${userId}', event)"></i>
+                    <i class="fas fa-eye-slash action-icon" title="إخفاء الشاشة" onclick="hideDisplay('${userId}', event)"></i>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items: center;">
+                    <div>
+                        <span class="user-id-tag">
+                            ID: ${userId.substring(0,8)}
+                            <i class="fas fa-copy copy-id-btn" title="نسخ المعرف" onclick="copyToClipboard('${userId}', event)"></i>
+                        </span>
+                        <strong class="user-nickname">${chatData.username}</strong>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
+                        <small style="font-size:0.65rem; color:#999;">${lastMsg ? formatTime(lastMsg.time) : ''}</small>
+                        ${unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : ''}
+                    </div>
+                </div>
+                <div style="font-size:0.75rem; color:#555; margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-right: 5px;">
+                    ${isTyping ? '<span class="typing-indicator">يكتب الآن...</span>' : `
+                        <span style="font-weight: bold; color: #777;">${lastMsgPrefix}</span>
+                        ${lastMsg ? (lastMsg.isDeleted ? '🚫 تم حذف هذه الرسالة' : (lastMsg.type === 'text' || !lastMsg.type ? lastMsg.text : '📎 وسائط')) : 'محادثة فارغة'}
+                    `}
+                </div>
+            `;
+            userListDiv.appendChild(userItem);
+
+            if (activeUserId === userId) {
+                const statusIndicator = document.getElementById('statusIndicator');
+                if (isTyping) {
+                    statusIndicator.innerHTML = '<span class="typing-indicator">يكتب الآن...</span>';
+                } else {
+                    statusIndicator.innerHTML = '● نشط الآن';
+                    statusIndicator.style.color = '#10b981';
+                }
+            }
+        });
+
+        if (activeUserId && chats[activeUserId] && !isDisplayHidden) {
+            renderMessages(chats[activeUserId].messages);
+        }
+    }
+
+    function openChat(userId) {
+        activeUserId = userId;
+        isDisplayHidden = false;
+        editingMsgId = null;
+        lastKnownMessagesCount = 0; 
+        
+        setReadStatus(userId);
+        closeEmojiPicker();
+
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('chatContent').style.display = 'flex';
+        const chats = JSON.parse(localStorage.getItem('app_chats')) || {};
+        document.getElementById('currentUserName').innerText = chats[userId].username;
+        document.getElementById('currentUserDisplayId').innerText = `(ID: ${userId})`;
+        
+        const input = document.getElementById('adminInput');
+        input.value = '';
+        input.style.border = "1px solid #ccc";
+        
+        // تصفير خانة بحث الشات عند فتح محادثة جديدة
+        document.getElementById('chatSearchInput').value = "";
+        
+        renderMessages(chats[userId].messages);
+        loadRealChats();
+    }
+
+    function toggleMsgPopover(e, index) {
+        e.stopPropagation();
+        closeAllPopovers();
+        const popover = document.getElementById(`popover-${index}`);
+        if (popover) popover.style.display = 'flex';
+    }
+
+    function closeAllPopovers() {
+        document.querySelectorAll('.msg-popover').forEach(p => p.style.display = 'none');
+    }
+
+    function copyMsg(text) {
+        navigator.clipboard.writeText(text);
+        closeAllPopovers();
+    }
+
+    function startEditMsg(id, text) {
+        editingMsgId = id;
+        const input = document.getElementById('adminInput');
+        input.value = text;
+        input.focus();
+        input.style.border = "2px solid var(--warning)";
+        closeAllPopovers();
+    }
+
+    function deleteMsgLocal(index) {
+        if(!confirm("حذف هذه الرسالة من شاشتك فقط؟")) return;
+        let chats = JSON.parse(localStorage.getItem('app_chats')) || {};
+        chats[activeUserId].messages[index].hiddenForAdmin = true;
+        localStorage.setItem('app_chats', JSON.stringify(chats));
+        renderMessages(chats[activeUserId].messages);
+    }
+
+    function deleteMsgGlobal(index) {
+        if(!confirm("سيتم حذف الرسالة نهائياً للطرفين. استمرار؟")) return;
+        let chats = JSON.parse(localStorage.getItem('app_chats')) || {};
+        chats[activeUserId].messages[index].isDeleted = true;
+        chats[activeUserId].messages[index].text = "تم حذف هذه الرسالة";
+        localStorage.setItem('app_chats', JSON.stringify(chats));
+        renderMessages(chats[activeUserId].messages);
+    }
+
+    function renderMessages(messages) {
+        if (isDisplayHidden) return; 
+        const container = document.getElementById('chatMessages');
+        const chatSearchKeyword = document.getElementById('chatSearchInput').value.toLowerCase().trim();
+
+        const isAtBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 60;
+        const isNewMessageAdded = messages.length > lastKnownMessagesCount;
+
+        container.innerHTML = '';
+        messages.forEach((m, index) => {
+            if (m.hiddenForAdmin) return;
+            const row = document.createElement('div');
+            row.className = `msg-row ${m.sender}`;
+            
+            let content = "";
+            if (m.isDeleted) {
+                content = `<span style="color:#999; font-style:italic;"><i class="fas fa-ban"></i> تم حذف هذه الرسالة</span>`;
+            } else {
+                if (m.type === 'image') content = `<img src="${m.text}">`;
+                else if (m.type === 'video') content = `<video src="${m.text}" controls></video>`;
+                else if (m.type === 'file') {
+                    content = `
+                        <a href="${m.text}" download="${m.fileName || 'file'}" class="file-attachment">
+                            <i class="fas fa-file-download fa-2x" style="color:var(--primary)"></i>
+                            <div style="overflow:hidden">
+                                <div style="font-weight:bold; font-size:0.8rem; white-space:nowrap; text-overflow:ellipsis;">${m.fileName || 'تحميل الملف'}</div>
+                                <small style="opacity:0.7">اضغط للتحميل</small>
+                            </div>
+                        </a>`;
+                } else {
+                    // معالجة تظليل الكلمات المبحوث عنها في الشات
+                    let displayText = m.text || "";
+                    if (chatSearchKeyword !== "" && displayText.toLowerCase().includes(chatSearchKeyword)) {
+                        const regex = new RegExp(`(${chatSearchKeyword})`, 'gi');
+                        displayText = displayText.replace(regex, `<span class="highlight">$1</span>`);
+                    }
+                    content = `<span>${displayText}</span>`;
+                }
+            }
+
+            const statusTags = `
+                <div style="display:flex; align-items:center; justify-content:flex-end; gap:4px; margin-top:2px;">
+                    ${m.isEdited ? '<span class="msg-status-tag">معدلة</span>' : ''}
+                    <small style="font-size:0.6rem; opacity:0.6;">${formatTime(m.time)}</small>
+                    ${m.sender === 'admin' ? (m.isRead ? '<i class="fas fa-check-double read-check"></i>' : '<i class="fas fa-check" style="color:#999; font-size:0.7rem;"></i>') : ''}
+                </div>
+            `;
+
+            const popover = `
+                <div class="msg-popover" id="popover-${index}">
+                    <div class="popover-item" title="نسخ" onclick="copyMsg('${m.text}')"><i class="fas fa-copy"></i></div>
+                    ${(m.sender === 'admin' && !m.isDeleted && (m.type === 'text' || !m.type)) ? `<div class="popover-item" title="تعديل" onclick="startEditMsg(${m.id || index}, '${m.text}')"><i class="fas fa-edit"></i></div>` : ''}
+                    <div class="popover-item" title="حذف لدي" onclick="deleteMsgLocal(${index})"><i class="fas fa-user-slash"></i></div>
+                    <div class="popover-item danger" title="حذف للجميع" onclick="deleteMsgGlobal(${index})"><i class="fas fa-trash-alt"></i></div>
+                </div>`;
+
+            const optionsBtn = m.isDeleted ? '' : `<div class="msg-options-trigger" onclick="toggleMsgPopover(event, ${index})">⋮</div>`;
+            const msgDiv = `<div class="msg ${m.sender}">${popover}${content}${statusTags}</div>`;
+            row.innerHTML = msgDiv + optionsBtn;
+            container.appendChild(row);
+        });
+
+        if (isAtBottom || (isNewMessageAdded && lastKnownMessagesCount !== 0) || lastKnownMessagesCount === 0) {
+            container.scrollTop = container.scrollHeight;
+        }
+        lastKnownMessagesCount = messages.length;
+    }
+
+    function sendReply() {
+        const input = document.getElementById('adminInput');
+        if (!input.value.trim() || !activeUserId) return;
+        let chats = JSON.parse(localStorage.getItem('app_chats')) || {};
+        
+        if (editingMsgId !== null) {
+            const msgIndex = chats[activeUserId].messages.findIndex(m => (m.id || -1) === editingMsgId);
+            if (msgIndex !== -1) {
+                chats[activeUserId].messages[msgIndex].text = input.value;
+                chats[activeUserId].messages[msgIndex].isEdited = true;
+            }
+            editingMsgId = null;
+            input.style.border = "1px solid #ccc";
+        } else {
+            chats[activeUserId].messages.push({
+                id: Date.now(),
+                sender: 'admin', 
+                text: input.value, 
+                type: 'text',
+                time: new Date().toISOString(), 
+                hiddenForAdmin: false,
+                isRead: false,
+                isEdited: false,
+                isDeleted: false
+            });
+        }
+        
+        localStorage.setItem('app_chats', JSON.stringify(chats));
+        input.value = '';
+        renderMessages(chats[activeUserId].messages);
+        loadRealChats();
+        closeEmojiPicker();
+    }
+
+    function hideDisplay(id, e) {
+        if (e) e.stopPropagation(); 
+        if (activeUserId === id) {
+            isDisplayHidden = true;
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = `<div class="hidden-notice"><div><i class="fas fa-eye-slash fa-3x" style="opacity:0.2; display:block; margin-bottom:10px;"></i>محتوى الدردشة مخفي الآن.<br><small>اضغط على العميل لإظهاره.</small></div></div>`;
+        }
+    }
+
+    function endChatOfficial() {
+        if (!confirm("هل تريد إرسال رسالة إنهاء المحادثة؟")) return;
+        saveMessageToGlobal('admin', "تم إنهاء المحادثة من خلال فريق الدعم. شكراً لكم.", 'text');
+    }
+
+    function deleteForMe() {
+        if (!confirm("سيتم حذف رسائل الآدمن من هذا السجل لديك فقط.")) return;
+        let chats = JSON.parse(localStorage.getItem('app_chats')) || {};
+        if (chats[activeUserId]) {
+            chats[activeUserId].messages.forEach(m => { if(m.sender === 'admin') m.hiddenForAdmin = true; });
+            localStorage.setItem('app_chats', JSON.stringify(chats));
+            renderMessages(chats[activeUserId].messages);
+        }
+    }
+
+    function deleteFullConversation() {
+        if (!confirm("تحذير: حذف كامل المحادثة نهائياً!")) return;
+        let chats = JSON.parse(localStorage.getItem('app_chats')) || {};
+        delete chats[activeUserId];
+        localStorage.setItem('app_chats', JSON.stringify(chats));
+        activeUserId = null;
+        document.getElementById('chatContent').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'flex';
+        loadRealChats();
+    }
+
+    function toggleArchive(id, e) {
+        e.stopPropagation();
+        let chats = JSON.parse(localStorage.getItem('app_chats')) || {};
+        chats[id].isArchived = !chats[id].isArchived;
+        localStorage.setItem('app_chats', JSON.stringify(chats));
+        loadRealChats();
+    }
+
+    function saveMessageToGlobal(sender, text, type, fileName = null) {
+        let chats = JSON.parse(localStorage.getItem('app_chats')) || {};
+        if(!chats[activeUserId]) return;
+        chats[activeUserId].messages.push({
+            id: Date.now(),
+            sender: sender, text: text, type: type, fileName: fileName,
+            time: new Date().toISOString(), hiddenForAdmin: false,
+            isRead: false, isEdited: false, isDeleted: false
+        });
+        localStorage.setItem('app_chats', JSON.stringify(chats));
+        renderMessages(chats[activeUserId].messages);
+        loadRealChats();
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('tabActive').classList.toggle('active', tab === 'active');
+        document.getElementById('tabArchived').classList.toggle('active', tab === 'archived');
+        loadRealChats();
+    }
+
+    function formatTime(isoStr) {
+        const d = new Date(isoStr);
+        return d.getHours().toString().padStart(2,'0') + ":" + d.getMinutes().toString().padStart(2, '0');
+    }
+
+    window.addEventListener('storage', (e) => { 
+        if (e.key === 'app_chats' || e.key === 'app_typing_status') {
+            loadRealChats();
+            if (activeUserId) markUserMessagesAsRead(activeUserId);
+        } 
+    });
+
+    setInterval(loadRealChats, 2500); 
+    window.onload = loadRealChats;
+</script>
+</body>
+</html>

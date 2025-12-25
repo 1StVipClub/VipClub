@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - إدارة المستخدمين</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --admin-primary: #4f46e5;
+            --admin-dark: #0f172a;
+            --admin-bg: #f8fafc;
+            --gold: #f59e0b;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background: var(--admin-bg); margin: 0; color: #334155; }
+        
+        /* Header */
+        .admin-header { background: var(--admin-dark); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .stats-bar { display: flex; gap: 20px; }
+        .stat-card { background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 10px; text-align: center; }
+
+        .container { padding: 30px; max-width: 1400px; margin: 0 auto; }
+
+        /* Sections Layout */
+        .grid-layout { display: grid; grid-template-columns: 1fr 350px; gap: 30px; }
+
+        /* Badges Creator Section */
+        .badge-creator { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .badge-preview { width: 100px; height: 100px; border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; border: 2px dashed #ccc; font-size: 0.8rem; overflow: hidden; }
+        .badge-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Users Table */
+        .users-section { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; text-align: right; }
+        th { background: #f1f5f9; padding: 15px; font-weight: 600; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 15px; border-bottom: 1px solid #f1f5f9; }
+        tr:hover { background: #f8fafc; }
+
+        /* Badge Tag */
+        .badge-tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; color: white; margin-right: 5px; }
+
+        /* Form Elements */
+        input, select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; margin-top: 10px; box-sizing: border-box; }
+        .btn { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-save { background: var(--admin-primary); color: white; width: 100%; }
+        .btn-edit { background: #e0e7ff; color: var(--admin-primary); }
+
+        /* Modal */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 25px; width: 500px; max-width: 90%; max-height: 90vh; overflow-y: auto; }
+
+        /* Transactions Style */
+        .trans-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 5px; background: #f1f5f9; }
+    </style>
+</head>
+<body>
+
+<header class="admin-header">
+    <div>
+        <h1><i class="fas fa-user-shield"></i> لوحة تحكم VipClub</h1>
+    </div>
+    <div class="stats-bar">
+        <div class="stat-card"><small>المستخدمين</small><div id="totalUsersCount">0</div></div>
+        <div class="stat-card"><small>إجمالي العمليات</small><div id="totalOrdersCount">0</div></div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="grid-layout">
+        <section class="users-section">
+            <div style="padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
+                <h3 style="margin:0;">قائمة الأعضاء ونشاطاتهم</h3>
+                <input type="text" id="searchUser" placeholder="بحث باسم المستخدم أو ID..." style="width: 250px; margin:0;" oninput="renderUsers()">
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>المستخدم</th>
+                        <th>الرصيد (ج.م/$)</th>
+                        <th>المعاملات</th>
+                        <th>العلامات المميزة</th>
+                        <th>تحكم</th>
+                    </tr>
+                </thead>
+                <tbody id="usersListTable">
+                    </tbody>
+            </table>
+        </section>
+
+        <aside>
+            <div class="badge-creator">
+                <h3><i class="fas fa-award"></i> إنشاء علامة تجارية</h3>
+                <label>اسم العلامة (مثل: تاجر موثوق):</label>
+                <input type="text" id="badgeName" placeholder="أدخل الاسم...">
+                
+                <label>لون العلامة:</label>
+                <input type="color" id="badgeColor" value="#4f46e5">
+                
+                <label>أيقونة العلامة (رابط صورة):</label>
+                <input type="text" id="badgeIcon" placeholder="https://image-link.com/icon.png">
+                
+                <div class="badge-preview" id="badgePreview">معاينة</div>
+                
+                <button class="btn btn-save" onclick="createNewBadge()">حفظ العلامة في النظام</button>
+                
+                <div style="margin-top: 25px;">
+                    <h4>العلامات المتاحة:</h4>
+                    <div id="availableBadgesList"></div>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<div class="modal" id="editUserModal">
+    <div class="modal-content">
+        <h3 id="editUserNameDisplay">تعديل ملف المستخدم</h3>
+        <hr>
+        <label>الاسم المستعار:</label>
+        <input type="text" id="editNickname">
+        
+        <label>الرصيد جنيه مصري:</label>
+        <input type="number" id="editEGP">
+        
+        <label>الرصيد دولار:</label>
+        <input type="number" id="editUSD">
+
+        <label>إدارة العلامات المميزة:</label>
+        <div id="userBadgeManagement" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px;"></div>
+
+        <div style="margin-top: 20px; display: flex; gap: 10px;">
+            <button class="btn btn-save" onclick="saveUserEdits()">حفظ التغييرات</button>
+            <button class="btn" style="background:#f1f5f9;" onclick="closeModal()">إغلاق</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentEditingUserId = null;
+
+    // 1. إدارة البيانات الأساسية
+    function loadData() {
+        const users = JSON.parse(localStorage.getItem('app_users')) || [];
+        const orders = JSON.parse(localStorage.getItem('admin_orders')) || [];
+        const systemBadges = JSON.parse(localStorage.getItem('system_badges')) || [
+            { id: 1, name: 'VIP', color: '#f59e0b', icon: '' },
+            { id: 2, name: 'موثوق', color: '#10b981', icon: '' }
+        ];
+        return { users, orders, systemBadges };
+    }
+
+    // 2. إنشاء علامة جديدة
+    function createNewBadge() {
+        const name = document.getElementById('badgeName').value;
+        const color = document.getElementById('badgeColor').value;
+        const icon = document.getElementById('badgeIcon').value;
+        
+        if(!name) return alert("يرجى كتابة اسم للعلامة");
+
+        const { systemBadges } = loadData();
+        const newBadge = { id: Date.now(), name, color, icon };
+        systemBadges.push(newBadge);
+        
+        localStorage.setItem('system_badges', JSON.stringify(systemBadges));
+        alert("تم إنشاء العلامة بنجاح");
+        location.reload();
+    }
+
+    // 3. عرض المستخدمين في الجدول
+    function renderUsers() {
+        const { users, orders, systemBadges } = loadData();
+        const searchTerm = document.getElementById('searchUser').value.toLowerCase();
+        const tbody = document.getElementById('usersListTable');
+        tbody.innerHTML = '';
+
+        document.getElementById('totalUsersCount').innerText = users.length;
+        document.getElementById('totalOrdersCount').innerText = orders.length;
+
+        users.forEach(user => {
+            if (user.username.toLowerCase().includes(searchTerm) || user.id.toString().includes(searchTerm)) {
+                const userOrders = orders.filter(o => o.userId === user.id);
+                const purchases = userOrders.filter(o => o.orderId.startsWith('TRX')).length;
+                const deposits = userOrders.filter(o => o.orderId.startsWith('DEP')).length;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <b>${user.nickname || user.username}</b><br>
+                        <small style="color:#888">ID: ${user.id}</small>
+                    </td>
+                    <td>
+                        <span style="color:green">${user.balanceEGP || 0} ج.م</span><br>
+                        <span style="color:blue">${user.balanceUSD || 0} $</span>
+                    </td>
+                    <td>
+                        <span class="trans-badge">شراء: ${purchases}</span>
+                        <span class="trans-badge">إيداع: ${deposits}</span>
+                    </td>
+                    <td id="badges-user-${user.id}">
+                        ${renderUserBadges(user.assignedBadges, systemBadges)}
+                    </td>
+                    <td>
+                        <button class="btn btn-edit" onclick="openEditModal(${user.id})">تعديل</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            }
+        });
+
+        // عرض العلامات في الجانب
+        const availableDiv = document.getElementById('availableBadgesList');
+        availableDiv.innerHTML = systemBadges.map(b => `
+            <div class="badge-tag" style="background:${b.color}">${b.name}</div>
+        `).join('');
+    }
+
+    function renderUserBadges(userBadgeIds = [], systemBadges) {
+        return userBadgeIds.map(id => {
+            const badge = systemBadges.find(b => b.id == id);
+            return badge ? `<span class="badge-tag" style="background:${badge.color}">${badge.name}</span>` : '';
+        }).join('');
+    }
+
+    // 4. نافذة التعديل
+    function openEditModal(userId) {
+        const { users, systemBadges } = loadData();
+        const user = users.find(u => u.id == userId);
+        currentEditingUserId = userId;
+
+        document.getElementById('editUserNameDisplay').innerText = "تعديل: " + user.username;
+        document.getElementById('editNickname').value = user.nickname || "";
+        document.getElementById('editEGP').value = user.balanceEGP || 0;
+        document.getElementById('editUSD').value = user.balanceUSD || 0;
+
+        const badgeManager = document.getElementById('userBadgeManagement');
+        badgeManager.innerHTML = '<b>اختر العلامات:</b><br>';
+        
+        systemBadges.forEach(badge => {
+            const isAssigned = (user.assignedBadges || []).includes(badge.id);
+            badgeManager.innerHTML += `
+                <label style="background:#f1f5f9; padding:5px 10px; border-radius:10px; cursor:pointer;">
+                    <input type="checkbox" style="width:auto;" value="${badge.id}" ${isAssigned ? 'checked' : ''} class="badge-checkbox">
+                    ${badge.name}
+                </label>
+            `;
+        });
+
+        document.getElementById('editUserModal').style.display = 'flex';
+    }
+
+    function saveUserEdits() {
+        const { users } = loadData();
+        const idx = users.findIndex(u => u.id == currentEditingUserId);
+        
+        if(idx !== -1) {
+            users[idx].nickname = document.getElementById('editNickname').value;
+            users[idx].balanceEGP = parseFloat(document.getElementById('editEGP').value);
+            users[idx].balanceUSD = parseFloat(document.getElementById('editUSD').value);
+            
+            // حفظ العلامات المختارة
+            const selectedBadges = Array.from(document.querySelectorAll('.badge-checkbox:checked')).map(cb => parseInt(cb.value));
+            users[idx].assignedBadges = selectedBadges;
+
+            localStorage.setItem('app_users', JSON.stringify(users));
+            alert("تم حفظ البيانات بنجاح");
+            closeModal();
+            renderUsers();
+        }
+    }
+
+    function closeModal() { document.getElementById('editUserModal').style.display = 'none'; }
+
+    // تشغيل عند التحميل
+    window.onload = renderUsers;
+
+    // تحديث المعاينة للعلامة
+    document.getElementById('badgeColor').oninput = function() {
+        const preview = document.getElementById('badgePreview');
+        preview.style.backgroundColor = this.value;
+    }
+    document.getElementById('badgeIcon').onchange = function() {
+        const preview = document.getElementById('badgePreview');
+        if(this.value) preview.innerHTML = `<img src="${this.value}">`;
+    }
+</script>
+
+</body>
+</html>
