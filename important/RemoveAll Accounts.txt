@@ -1,0 +1,39 @@
+دالة جعل المتجر فارغ
+const manualProducts = []; 
+
+دالة اضافة حسابات للمتجر
+const manualProducts = [
+            {
+                id: 101,
+                title: "حساب ببجي ليفل 75 (مثال بالجنيه)",
+                desc: "مشحون 10 مواسم، سكنات نادرة، مجموعة الجوكر كاملة.",
+                price: 1500,
+                currency: "جنيه (EGP)",
+                badge: "مميز",
+                stock: 1,
+                mainImg: "images/pubg_main.jpg", // ضع اسم صورتك هنا
+                gallery: ["images/pubg_side1.jpg", "images/pubg_side2.jpg"] // صور إضافية
+            },
+            {
+                id: 102,
+                title: "حساب فورتنايت نادر (مثال بالدولار)",
+                desc: "سكنات سيزون 2، يحتوي على المظلة الأصلية وسكنات نادرة.",
+                price: 50,
+                currency: "دولار (USD)",
+                badge: "نادر جداً",
+                stock: 1,
+                mainImg: "images/fortnite_main.jpg", // ضع اسم صورتك هنا
+                gallery: [] // اتركها فارغة إذا لم توجد صور إضافية
+            },
+            {
+                id: 103,
+                title: "حساب فري فاير (مثال بالجنيه)",
+                desc: "يحتوي على الكريمنال الأزرق ورقصات العرش القديمة.",
+                price: 600,
+                currency: "جنيه (EGP)",
+                badge: "عرض محدود",
+                stock: 1,
+                mainImg: "images/freefire_main.jpg", // ضع اسم صورتك هنا
+                gallery: ["images/ff_gallery1.jpg"] 
+            }
+        ];

@@ -1,0 +1,2487 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👑 لوحة إدارة VIP Club</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* الهيدر */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo h1 {
+            color: #333;
+            font-size: 28px;
+            font-weight: 800;
+        }
+        
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        /* البحث */
+        .search-container {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+        
+        /* الأزرار */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 5px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-info {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        /* إحصائيات */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        /* الجدول */
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+        
+        thead {
+            background: #667eea;
+        }
+        
+        th {
+            padding: 15px;
+            color: white;
+            font-weight: 600;
+            text-align: right;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+        }
+        
+        tr:hover {
+            background: #f9f9f9;
+        }
+        
+        .banned-row {
+            background-color: #fff5f5;
+        }
+        
+        /* خلايا خاصة */
+        .user-id {
+            background: linear-gradient(90deg, #4f46e5, #8b5cf6);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            display: inline-block;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .username {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .password {
+            font-family: monospace;
+            background: #f1f5f9;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: #4338ca;
+        }
+        
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-banned {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        /* أرصدة */
+        .balance-cell {
+            font-weight: bold;
+            padding: 6px 10px;
+            border-radius: 6px;
+            display: inline-block;
+            min-width: 80px;
+        }
+        
+        .balance-egp {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        
+        .balance-usd {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+        
+        /* معلومات إضافية */
+        .user-info-tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .user-info-tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            right: 50%;
+            transform: translateX(50%);
+            background: #334155;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: pre-line;
+            z-index: 1000;
+            min-width: 200px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        /* أفعال */
+        .actions {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            padding: 6px 10px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        
+        /* المودال */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+        
+        /* رسائل التنبيه */
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        .alert-info {
+            background: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+        
+        /* التحميل */
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* إشعار مستخدم جديد */
+        .new-user-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 1001;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        /* تنسيقات إضافية */
+        .section-title {
+            margin: 20px 0 10px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+            color: #4f46e5;
+            font-size: 18px;
+        }
+        
+        .balance-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .balance-input {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .balance-input input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        /* قسم المستخدمين المحذوفين */
+        .deleted-section {
+            margin-top: 30px;
+            background: #fef2f2;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #fecaca;
+        }
+        
+        .deleted-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .deleted-table th {
+            background: #ef4444;
+            padding: 10px;
+            color: white;
+            font-size: 12px;
+        }
+        
+        .deleted-table td {
+            padding: 8px;
+            font-size: 12px;
+            border-bottom: 1px solid #fee2e2;
+        }
+        
+        .deleted-status {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .status-permanent {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-temporary {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        /* فلتر */
+        .filter-container {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+        
+        .filter-group label {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #64748b;
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        
+        /* تنسيق الأيقونات */
+        .icon-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .gender-icon {
+            font-size: 14px;
+        }
+        
+        .country-flag {
+            font-size: 14px;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- إشعار مستخدم جديد -->
+    <div id="newUserNotification" class="new-user-notification">
+        👤 <strong>تم إضافة مستخدم جديد!</strong>
+        <div id="newUserInfo" style="font-size: 12px; margin-top: 5px;"></div>
+    </div>
+    
+    <div class="container">
+        <!-- الهيدر -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">👑</div>
+                <h1>VIP Club - لوحة الإدارة</h1>
+            </div>
+            
+            <div class="search-container">
+                <div class="search-icon">🔍</div>
+                <input type="text" id="searchInput" class="search-box" placeholder="ابحث عن مستخدم..." onkeyup="filterUsers()">
+            </div>
+            
+            <div>
+                <button class="btn btn-primary" onclick="loadUsers()">
+                    <span>🔄</span> تحديث
+                </button>
+                <button class="btn btn-success" onclick="showAddModal()">
+                    <span>➕</span> إضافة مستخدم
+                </button>
+                <button class="btn btn-warning" onclick="showDeletedUsersSection()">
+                    <span>🗑️</span> عرض المحذوفين
+                </button>
+                <button class="btn btn-info" onclick="exportUsersData()">
+                    <span>📊</span> تصدير البيانات
+                </button>
+                <button class="btn btn-danger" onclick="goToHome()">
+                    <span>🏠</span> الصفحة الرئيسية
+                </button>
+            </div>
+        </div>
+        
+        <!-- الإحصائيات -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalUsers">0</div>
+                <div class="stat-label">👥 إجمالي المستخدمين</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="activeUsers">0</div>
+                <div class="stat-label">✅ نشطين</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="bannedUsers">0</div>
+                <div class="stat-label">🚫 محظورين</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="todayUsers">0</div>
+                <div class="stat-label">📅 مسجلين اليوم</div>
+            </div>
+        </div>
+        
+        <!-- أدوات سريعة -->
+        <div class="quick-actions">
+            <button class="btn btn-primary" onclick="showBalanceUpdateModal()">
+                <span>💰</span> تحديث الأرصدة
+            </button>
+            <button class="btn btn-success" onclick="showBulkActionsModal()">
+                <span>⚡</span> إجراءات جماعية
+            </button>
+            <button class="btn btn-warning" onclick="showUserActivityReport()">
+                <span>📈</span> تقرير النشاط
+            </button>
+            <button class="btn btn-info" onclick="toggleConnectionInfo()">
+                <span>🔗</span> معلومات الاتصال
+            </button>
+        </div>
+        
+        <!-- الفلاتر -->
+        <div class="filter-container">
+            <div class="filter-group">
+                <label>الحالة</label>
+                <select id="filterStatus" onchange="filterUsers()">
+                    <option value="">الكل</option>
+                    <option value="active">نشط</option>
+                    <option value="banned">محظور</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>الجنس</label>
+                <select id="filterGender" onchange="filterUsers()">
+                    <option value="">الكل</option>
+                    <option value="ذكر">ذكر</option>
+                    <option value="أنثى">أنثى</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>من تاريخ</label>
+                <input type="date" id="filterDateFrom" onchange="filterUsers()">
+            </div>
+            
+            <div class="filter-group">
+                <label>إلى تاريخ</label>
+                <input type="date" id="filterDateTo" onchange="filterUsers()">
+            </div>
+            
+            <div class="filter-group">
+                <label>الرصيد الأدنى (EGP)</label>
+                <input type="number" id="filterMinBalance" placeholder="0" onchange="filterUsers()">
+            </div>
+            
+            <button class="btn btn-primary" onclick="resetFilters()">
+                <span>🔄</span> إعادة التعيين
+            </button>
+        </div>
+        
+        <!-- رسائل التنبيه -->
+        <div id="alertContainer"></div>
+        
+        <!-- معلومات الاتصال -->
+        <div id="connectionInfo" style="display: none; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+            <h3 style="margin-bottom: 10px;">🔗 معلومات الاتصال</h3>
+            <div style="font-family: monospace; font-size: 14px;">
+                <div>📍 الموقع: <span style="color: green">us-central1</span></div>
+                <div>🔗 رابط قاعدة البيانات: <span style="color: blue">https://vipclub-1d04a-default-rtdb.firebaseio.com</span></div>
+                <div>✅ الحالة: <span id="connectionStatus" style="color: green">جارٍ الاختبار...</span></div>
+                <div>📊 عدد المستخدمين الحالي: <span id="liveUserCount">0</span></div>
+                <div>⏱️ آخر تحديث: <span id="lastUpdateTime">---</span></div>
+            </div>
+        </div>
+        
+        <!-- الجدول الرئيسي للمستخدمين -->
+        <div class="table-container">
+            <table id="usersTable">
+                <thead>
+                    <tr>
+                        <th width="100">المعرف</th>
+                        <th>اسم المستخدم</th>
+                        <th>الاسم المستعار</th>
+                        <th>البيانات الشخصية</th>
+                        <th>كلمة المرور</th>
+                        <th width="150">الرصيد</th>
+                        <th width="100">الحالة</th>
+                        <th width="150">التواصل</th>
+                        <th width="120">التسجيل</th>
+                        <th width="250">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="10">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>جاري الاتصال بقاعدة البيانات...</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- قسم المستخدمين المحذوفين (مخفي افتراضياً) -->
+        <div id="deletedUsersSection" class="deleted-section" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0; color: #ef4444;">🗑️ المستخدمين المحذوفين</h3>
+                <button class="btn btn-primary" onclick="loadDeletedUsers()">
+                    <span>🔄</span> تحديث القائمة
+                </button>
+            </div>
+            <table class="deleted-table">
+                <thead>
+                    <tr>
+                        <th width="80">المعرف</th>
+                        <th>اسم المستخدم</th>
+                        <th width="150">التواصل</th>
+                        <th width="120">تاريخ الحذف</th>
+                        <th width="100">سبب الحذف</th>
+                        <th width="100">نوع الحذف</th>
+                        <th width="200">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="deletedUsersBody">
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 20px;">
+                            جاري تحميل المستخدمين المحذوفين...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- مودال إضافة مستخدم -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <h2>➕ إضافة مستخدم جديد</h2>
+            <div class="form-group">
+                <label>اسم المستخدم *</label>
+                <input type="text" id="addUsername" placeholder="اسم المستخدم" required>
+            </div>
+            <div class="form-group">
+                <label>كلمة المرور *</label>
+                <input type="text" id="addPassword" placeholder="كلمة المرور" required>
+            </div>
+            <div class="form-group">
+                <label>الاسم المستعار</label>
+                <input type="text" id="addNickname" placeholder="الاسم المستعار">
+            </div>
+            
+            <div class="section-title">البيانات الشخصية</div>
+            <div class="row">
+                <div class="form-group">
+                    <label>الجنس</label>
+                    <select id="addGender">
+                        <option value="">اختر...</option>
+                        <option value="ذكر">ذكر</option>
+                        <option value="أنثى">أنثى</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>العمر</label>
+                    <input type="number" id="addAge" placeholder="العمر">
+                </div>
+                <div class="form-group">
+                    <label>الدولة</label>
+                    <input type="text" id="addCountry" placeholder="البلد">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>نبذة مختصرة</label>
+                <textarea id="addBio" placeholder="نبذة عن المستخدم"></textarea>
+            </div>
+            
+            <div class="section-title">معلومات التواصل</div>
+            <div class="row">
+                <div class="form-group">
+                    <label>البريد الإلكتروني الأساسي</label>
+                    <input type="email" id="addEmail" placeholder="example@email.com">
+                </div>
+                <div class="form-group">
+                    <label>البريد الإلكتروني الإضافي</label>
+                    <input type="email" id="addEmail2" placeholder="email2@example.com">
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="form-group">
+                    <label>رقم الهاتف الأساسي</label>
+                    <input type="tel" id="addPhone" placeholder="01012345678">
+                </div>
+                <div class="form-group">
+                    <label>رقم الهاتف الإضافي</label>
+                    <input type="tel" id="addPhone2" placeholder="01123456789">
+                </div>
+            </div>
+            
+            <div class="section-title">الأرصدة الابتدائية</div>
+            <div class="row">
+                <div class="form-group">
+                    <label>الرصيد الابتدائي (EGP)</label>
+                    <input type="number" id="addBalanceEGP" placeholder="0.00" value="0">
+                </div>
+                <div class="form-group">
+                    <label>الرصيد الابتدائي (USD)</label>
+                    <input type="number" id="addBalanceUSD" placeholder="0.00" value="0">
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-success" onclick="addUser()">💾 حفظ</button>
+                <button class="btn btn-danger" onclick="hideAddModal()">✖ إلغاء</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- مودال تعديل المستخدم -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h2>✏️ تعديل مستخدم</h2>
+            <input type="hidden" id="editUserId">
+            
+            <div class="section-title">المعلومات الأساسية</div>
+            <div class="form-group">
+                <label>اسم المستخدم *</label>
+                <input type="text" id="editUsername" placeholder="اسم المستخدم" required>
+            </div>
+            <div class="form-group">
+                <label>الاسم المستعار</label>
+                <input type="text" id="editNickname" placeholder="الاسم المستعار">
+            </div>
+            <div class="form-group">
+                <label>كلمة المرور</label>
+                <input type="text" id="editPassword" placeholder="كلمة المرور">
+            </div>
+            
+            <div class="section-title">البيانات الشخصية</div>
+            <div class="row">
+                <div class="form-group">
+                    <label>الجنس</label>
+                    <select id="editGender">
+                        <option value="">اختر...</option>
+                        <option value="ذكر">ذكر</option>
+                        <option value="أنثى">أنثى</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>العمر</label>
+                    <input type="number" id="editAge" placeholder="العمر">
+                </div>
+                <div class="form-group">
+                    <label>الدولة</label>
+                    <input type="text" id="editCountry" placeholder="البلد">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>نبذة مختصرة</label>
+                <textarea id="editBio" placeholder="نبذة عن المستخدم"></textarea>
+            </div>
+            
+            <div class="section-title">معلومات التواصل</div>
+            <div class="row">
+                <div class="form-group">
+                    <label>البريد الإلكتروني الأساسي</label>
+                    <input type="email" id="editEmail" placeholder="example@email.com">
+                </div>
+                <div class="form-group">
+                    <label>البريد الإلكتروني الإضافي</label>
+                    <input type="email" id="editEmail2" placeholder="email2@example.com">
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="form-group">
+                    <label>رقم الهاتف الأساسي</label>
+                    <input type="tel" id="editPhone" placeholder="01012345678">
+                </div>
+                <div class="form-group">
+                    <label>رقم الهاتف الإضافي</label>
+                    <input type="tel" id="editPhone2" placeholder="01123456789">
+                </div>
+            </div>
+            
+            <div class="section-title">إدارة الأرصدة</div>
+            <div class="balance-controls">
+                <div class="balance-input">
+                    <label>رصيد EGP</label>
+                    <input type="number" id="editBalanceEGP" placeholder="0.00" step="0.01">
+                </div>
+                <div class="balance-input">
+                    <label>رصيد USD</label>
+                    <input type="number" id="editBalanceUSD" placeholder="0.00" step="0.01">
+                </div>
+            </div>
+            
+            <div class="balance-controls" style="margin-top: 15px;">
+                <button class="btn btn-primary" onclick="addToBalance('EGP')" style="flex: 1;">
+                    <span>➕</span> إضافة EGP
+                </button>
+                <button class="btn btn-success" onclick="addToBalance('USD')" style="flex: 1;">
+                    <span>➕</span> إضافة USD
+                </button>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-success" onclick="updateUser()">💾 حفظ التعديلات</button>
+                <button class="btn btn-danger" onclick="hideEditModal()">✖ إلغاء</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- مودال تحديث الأرصدة -->
+    <div id="balanceUpdateModal" class="modal">
+        <div class="modal-content">
+            <h2>💰 تحديث الأرصدة الجماعي</h2>
+            <div class="form-group">
+                <label>اختر العملة</label>
+                <select id="bulkCurrency">
+                    <option value="EGP">جنيه مصري (EGP)</option>
+                    <option value="USD">دولار أمريكي (USD)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>نوع العملية</label>
+                <select id="bulkOperation">
+                    <option value="add">إضافة</option>
+                    <option value="subtract">خصم</option>
+                    <option value="set">تعيين قيمة محددة</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>المبلغ</label>
+                <input type="number" id="bulkAmount" placeholder="أدخل المبلغ" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>سبب التحديث</label>
+                <input type="text" id="bulkReason" placeholder="سبب تحديث الرصيد">
+            </div>
+            <div class="form-group">
+                <label>المستخدمين المحددين</label>
+                <div id="selectedUsersCount" style="padding: 10px; background: #f8f9fa; border-radius: 5px; text-align: center;">
+                    سيتم تطبيق على جميع المستخدمين الظاهرين
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-success" onclick="applyBulkBalanceUpdate()">💾 تطبيق</button>
+                <button class="btn btn-danger" onclick="hideBalanceUpdateModal()">✖ إلغاء</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- مودال الإجراءات الجماعية -->
+    <div id="bulkActionsModal" class="modal">
+        <div class="modal-content">
+            <h2>⚡ الإجراءات الجماعية</h2>
+            <div class="form-group">
+                <label>اختر الإجراء</label>
+                <select id="bulkActionType">
+                    <option value="ban">حظر المستخدمين</option>
+                    <option value="unban">فك حظر المستخدمين</option>
+                    <option value="delete_temp">حذف مؤقت</option>
+                    <option value="send_notification">إرسال إشعار</option>
+                </select>
+            </div>
+            
+            <div id="banReasonSection" style="display: none;">
+                <div class="form-group">
+                    <label>سبب الحظر</label>
+                    <input type="text" id="bulkBanReason" placeholder="سبب الحظر">
+                </div>
+                <div class="form-group">
+                    <label>مدة الحظر (أيام)</label>
+                    <input type="number" id="bulkBanDays" placeholder="0 للدائم" value="7">
+                </div>
+            </div>
+            
+            <div id="notificationSection" style="display: none;">
+                <div class="form-group">
+                    <label>عنوان الإشعار</label>
+                    <input type="text" id="bulkNotificationTitle" placeholder="عنوان الإشعار">
+                </div>
+                <div class="form-group">
+                    <label>محتوى الإشعار</label>
+                    <textarea id="bulkNotificationContent" placeholder="محتوى الإشعار"></textarea>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-success" onclick="applyBulkAction()">💾 تطبيق</button>
+                <button class="btn btn-danger" onclick="hideBulkActionsModal()">✖ إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+// 🔥 إعدادات Firebase - Realtime Database
+const firebaseConfig = {
+    apiKey: "AIzaSyAVSzkDLqi1G-hpfEPqvBMmuyYRfEuaTKk",
+    authDomain: "vipclub-1d04a.firebaseapp.com",
+    databaseURL: "https://vipclub-1d04a-default-rtdb.firebaseio.com",
+    projectId: "vipclub-1d04a",
+    storageBucket: "vipclub-1d04a.firebasestorage.app",
+    messagingSenderId: "120667552740",
+    appId: "1:120667552740:web:02085765fd43eb0080e5f1"
+};
+
+// المتغيرات العامة
+let database;
+let allUsers = [];
+let currentEditingUser = null;
+let selectedUsers = [];
+let lastUpdateTime = null;
+
+// دالة لإنشاء ID رقمي (مطابق للصفحة الرئيسية)
+function generateNumericId() {
+    return Math.floor(100000 + Math.random() * 900000);
+}
+
+// 1. تهيئة Firebase
+function initializeFirebase() {
+    try {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        database = firebase.database();
+        
+        showAlert('✅ تم الاتصال بـ Firebase Realtime Database', 'success');
+        
+        // اختبار الاتصال
+        testConnection();
+        
+        // تحميل البيانات
+        loadUsers();
+        
+        // الاستماع للمستخدمين الجدد
+        listenForNewUsers();
+        
+        // الاستماع للتحديثات الأخرى
+        listenForUpdates();
+        
+    } catch (error) {
+        showAlert('❌ خطأ في الاتصال: ' + error.message, 'error');
+    }
+}
+
+// 2. الاستماع للمستخدمين الجدد
+function listenForNewUsers() {
+    if (!database) return;
+    
+    database.ref('users').on('child_added', (snapshot) => {
+        const newUser = snapshot.val();
+        const userId = snapshot.key;
+        
+        console.log('👤 تم إضافة مستخدم جديد:', newUser.username);
+        
+        // عرض إشعار
+        showNewUserNotification(newUser);
+        
+        // إعادة تحميل البيانات
+        loadUsers();
+        
+        // تشغيل صوت إشعار
+        playNotificationSound();
+    });
+}
+
+// 3. الاستماع لتحديثات المستخدمين في الوقت الحقيقي
+function listenForUserUpdates() {
+    if (!database) return;
+    
+    database.ref('users').on('child_changed', (snapshot) => {
+        const updatedUser = snapshot.val();
+        const userId = snapshot.key;
+        
+        console.log('🔄 تم تحديث مستخدم:', updatedUser.username);
+        
+        // تحديث البيانات في الجدول مباشرة
+        updateUserInTable(userId, updatedUser);
+        
+        // تحديث قائمة المستخدمين
+        const userIndex = allUsers.findIndex(u => u.id === userId);
+        if (userIndex !== -1) {
+            allUsers[userIndex] = { id: userId, ...updatedUser };
+        }
+        
+        // تحديث وقت آخر تحديث
+        lastUpdateTime = new Date();
+        document.getElementById('lastUpdateTime').textContent = lastUpdateTime.toLocaleTimeString('ar-EG');
+        
+        // عرض إشعار بالتحديث
+        showAlert(`🔄 تم تحديث بيانات المستخدم ${updatedUser.username}`, 'info');
+    });
+}
+
+// 4. الاستماع للتحديثات الأخرى
+function listenForUpdates() {
+    if (!database) return;
+    
+    // الاستماع لعدد المستخدمين
+    database.ref('users').on('value', (snapshot) => {
+        if (snapshot.exists()) {
+            const count = Object.keys(snapshot.val()).length;
+            document.getElementById('liveUserCount').textContent = count;
+        }
+    });
+    
+    // الاستماع للتحديثات على المستخدمين
+    listenForUserUpdates();
+}
+
+// 5. تحديث مستخدم في الجدول مباشرة
+function updateUserInTable(userId, userData) {
+    const row = document.getElementById(`user-row-${userId}`);
+    if (!row) return;
+    
+    // تحديث البيانات في الصف
+    const numericIdCell = row.querySelector('.user-id');
+    const usernameCell = row.querySelector('.username');
+    const nicknameCell = row.cells[2]; // الخلية الثالثة
+    const personalDataCell = row.cells[3]; // خلية البيانات الشخصية
+    const passwordCell = row.querySelector('.password');
+    const balanceEGPCell = row.querySelector('.balance-egp');
+    const balanceUSDCell = row.querySelector('.balance-usd');
+    const statusCell = row.querySelector('.status-badge');
+    const contactCell = row.cells[7]; // خلية التواصل
+    const dateCell = row.cells[8]; // خلية التاريخ
+    
+    if (numericIdCell) {
+        numericIdCell.textContent = (userData.numericId || '').toString().padStart(6, '0');
+        numericIdCell.title = `Firebase Key: ${userId}\nNumeric ID: ${userData.numericId}`;
+    }
+    
+    if (usernameCell) usernameCell.textContent = userData.username || '---';
+    if (nicknameCell) nicknameCell.textContent = userData.nickname || '---';
+    if (passwordCell) passwordCell.textContent = userData.password || '---';
+    if (balanceEGPCell) balanceEGPCell.textContent = `${(userData.balanceEGP || 0).toFixed(2)} EGP`;
+    if (balanceUSDCell) balanceUSDCell.textContent = `${(userData.balanceUSD || 0).toFixed(2)} USD`;
+    
+    // تحديث البيانات الشخصية
+    if (personalDataCell) {
+        let genderIcon = userData.gender === 'أنثى' ? '👩' : userData.gender === 'ذكر' ? '👨' : '';
+        let ageText = userData.age ? `${userData.age} سنة` : '';
+        let countryText = userData.country ? `📍 ${userData.country}` : '';
+        
+        personalDataCell.innerHTML = `
+            <div class="user-info-tooltip" data-tooltip="الجنس: ${userData.gender || 'غير محدد'}
+العمر: ${userData.age || 'غير محدد'}
+البلد: ${userData.country || 'غير محدد'}">
+                <div class="icon-cell">
+                    <span class="gender-icon">${genderIcon}</span>
+                    ${ageText} 
+                    <span class="country-flag">${countryText}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    // تحديث التواصل
+    if (contactCell) {
+        contactCell.innerHTML = `
+            <div>📱 ${userData.phone || '---'}</div>
+            ${userData.phone2 ? `<div>📱 ${userData.phone2}</div>` : ''}
+            <div>📧 ${userData.email || '---'}</div>
+            ${userData.email2 ? `<div>📧 ${userData.email2}</div>` : ''}
+        `;
+    }
+    
+    // تحديث التاريخ
+    if (dateCell) {
+        if (userData.createdAt) {
+            try {
+                dateCell.textContent = new Date(userData.createdAt).toLocaleDateString('ar-EG');
+            } catch (e) {
+                dateCell.textContent = userData.createdAt;
+            }
+        }
+    }
+    
+    // تحديث الحالة
+    if (statusCell) {
+        const isBanned = userData.isBanned === true;
+        statusCell.className = `status-badge ${isBanned ? 'status-banned' : 'status-active'}`;
+        statusCell.textContent = isBanned ? '🚫 محظور' : '✅ نشط';
+        
+        // تحديث لون الصف
+        if (isBanned) {
+            row.classList.add('banned-row');
+        } else {
+            row.classList.remove('banned-row');
+        }
+    }
+}
+
+// 6. إشعار إضافة مستخدم جديد
+function showNewUserNotification(user) {
+    const notification = document.getElementById('newUserNotification');
+    const userInfo = document.getElementById('newUserInfo');
+    
+    userInfo.innerHTML = `
+        👤 ${user.username} 
+        🔢 ID: ${user.numericId || 'N/A'}
+        📅 ${new Date(user.createdAt || new Date()).toLocaleTimeString('ar-EG')}
+    `;
+    
+    notification.style.display = 'block';
+    
+    setTimeout(() => {
+        notification.style.display = 'none';
+    }, 5000);
+}
+
+// 7. تشغيل صوت الإشعار
+function playNotificationSound() {
+    try {
+        const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3');
+        audio.volume = 0.3;
+        audio.play();
+    } catch (e) {
+        console.log('Sound not available');
+    }
+}
+
+// 8. اختبار الاتصال
+async function testConnection() {
+    try {
+        await database.ref('connection_test').set({
+            timestamp: new Date().toISOString(),
+            message: 'اتصال ناجح من لوحة الإدارة'
+        });
+        
+        document.getElementById('connectionStatus').textContent = '✅ متصل';
+        document.getElementById('connectionStatus').style.color = 'green';
+        
+    } catch (error) {
+        document.getElementById('connectionStatus').textContent = '❌ غير متصل';
+        document.getElementById('connectionStatus').style.color = 'red';
+    }
+}
+
+// 9. تحميل المستخدمين
+async function loadUsers() {
+    const tbody = document.getElementById('tableBody');
+    
+    if (!database) {
+        tbody.innerHTML = '<tr><td colspan="10">❌ Firebase غير متصل</td></tr>';
+        return;
+    }
+    
+    try {
+        const snapshot = await database.ref('users').once('value');
+        allUsers = [];
+        selectedUsers = [];
+        let total = 0, active = 0, banned = 0, today = 0;
+        const todayDate = new Date().toDateString();
+        
+        if (snapshot.exists()) {
+            const usersData = snapshot.val();
+            
+            for (const userId in usersData) {
+                const userData = usersData[userId];
+                const user = {
+                    id: userId,
+                    firebaseKey: userId,
+                    numericId: userData.numericId || generateNumericId(),
+                    username: userData.username || '',
+                    nickname: userData.nickname || '',
+                    password: userData.password || '',
+                    email: userData.email || '',
+                    email2: userData.email2 || '',
+                    phone: userData.phone || '',
+                    phone2: userData.phone2 || '',
+                    gender: userData.gender || '',
+                    age: userData.age || '',
+                    country: userData.country || '',
+                    bio: userData.bio || '',
+                    isBanned: userData.isBanned === true,
+                    banReason: userData.banReason || '',
+                    banExpiry: userData.banExpiry || '',
+                    balanceEGP: parseFloat(userData.balanceEGP) || 0,
+                    balanceUSD: parseFloat(userData.balanceUSD) || 0,
+                    createdAt: userData.createdAt || '',
+                    updatedAt: userData.updatedAt || '',
+                    lastNicknameChange: userData.lastNicknameChange || ''
+                };
+                
+                // 🔧 التأكد من أن numericId موجود وتحديثه إذا لم يكن
+                if (!userData.numericId) {
+                    user.numericId = generateNumericId();
+                    await database.ref('users/' + userId).update({
+                        numericId: user.numericId,
+                        updatedAt: new Date().toISOString()
+                    });
+                }
+                
+                allUsers.push(user);
+                
+                total++;
+                if (user.isBanned) banned++; else active++;
+                if (user.createdAt && new Date(user.createdAt).toDateString() === todayDate) today++;
+            }
+        }
+        
+        // تحديث الإحصائيات
+        updateStats(total, active, banned, today);
+        
+        // عرض المستخدمين
+        displayUsers(allUsers);
+        
+        // تحديث وقت آخر تحديث
+        lastUpdateTime = new Date();
+        document.getElementById('lastUpdateTime').textContent = lastUpdateTime.toLocaleTimeString('ar-EG');
+        
+    } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="10">❌ خطأ: ${error.message}</td></tr>`;
+        showAlert('❌ خطأ في التحميل: ' + error.message, 'error');
+    }
+}
+
+// 10. عرض المستخدمين
+function displayUsers(users) {
+    const tbody = document.getElementById('tableBody');
+    
+    if (!users || users.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="10" style="text-align: center; padding: 40px;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">👥</div>
+                    <h3 style="color: #666;">لا يوجد مستخدمين</h3>
+                    <button class="btn btn-success" onclick="showAddModal()" style="margin-top: 15px;">
+                        ➕ إضافة أول مستخدم
+                    </button>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    let html = '';
+    
+    users.forEach(user => {
+        const isBanned = user.isBanned === true;
+        const statusClass = isBanned ? 'status-banned' : 'status-active';
+        const statusText = isBanned ? '🚫 محظور' : '✅ نشط';
+        const rowClass = isBanned ? 'banned-row' : '';
+        
+        // معلومات الحظر
+        let banInfo = '';
+        if (isBanned && user.banReason) {
+            banInfo = `<div style="font-size: 11px; color: #991b1b;">${user.banReason}</div>`;
+        }
+        
+        // التاريخ
+        let dateDisplay = '---';
+        if (user.createdAt) {
+            try {
+                dateDisplay = new Date(user.createdAt).toLocaleDateString('ar-EG');
+            } catch (e) {
+                dateDisplay = user.createdAt;
+            }
+        }
+        
+        // البيانات الشخصية
+        let genderIcon = user.gender === 'أنثى' ? '👩' : user.gender === 'ذكر' ? '👨' : '';
+        let ageText = user.age ? `${user.age} سنة` : '';
+        let countryText = user.country ? `📍 ${user.country}` : '';
+        
+        html += `
+            <tr class="${rowClass}" id="user-row-${user.id}">
+                <td>
+                    <div class="user-id" title="Firebase Key: ${user.id}\nNumeric ID: ${user.numericId}">
+                        ${user.numericId.toString().padStart(6, '0')}
+                    </div>
+                </td>
+                <td>
+                    <div class="username">${user.username || '---'}</div>
+                </td>
+                <td>${user.nickname || '---'}</td>
+                <td>
+                    <div class="user-info-tooltip" data-tooltip="الجنس: ${user.gender || 'غير محدد'}
+العمر: ${user.age || 'غير محدد'}
+البلد: ${user.country || 'غير محدد'}
+نبذة: ${user.bio || 'لا يوجد'}">
+                        <div class="icon-cell">
+                            <span class="gender-icon">${genderIcon}</span>
+                            ${ageText} 
+                            <span class="country-flag">${countryText}</span>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="password">${user.password || '---'}</div>
+                </td>
+                <td>
+                    <div style="display: flex; flex-direction: column; gap: 5px; align-items: center;">
+                        <span class="balance-cell balance-egp" title="الرصيد بالجنيه المصري">
+                            ${user.balanceEGP.toFixed(2)} EGP
+                        </span>
+                        <span class="balance-cell balance-usd" title="الرصيد بالدولار">
+                            ${user.balanceUSD.toFixed(2)} USD
+                        </span>
+                    </div>
+                </td>
+                <td>
+                    <div class="status-badge ${statusClass}">${statusText}</div>
+                    ${banInfo}
+                </td>
+                <td>
+                    <div>📱 ${user.phone || '---'}</div>
+                    ${user.phone2 ? `<div>📱 ${user.phone2}</div>` : ''}
+                    <div>📧 ${user.email || '---'}</div>
+                    ${user.email2 ? `<div>📧 ${user.email2}</div>` : ''}
+                </td>
+                <td>${dateDisplay}</td>
+                <td>
+                    <div class="actions">
+                        <button class="action-btn" style="background: #e0e7ff; color: #3730a3;" onclick="openEditModal('${user.id}')" title="تعديل">
+                            ✏️ تعديل
+                        </button>
+                        ${isBanned ? 
+                            `<button class="action-btn" style="background: #d1fae5; color: #065f46;" onclick="unbanUser('${user.id}')" title="فك الحظر">
+                                🔓 فك حظر
+                            </button>` : 
+                            `<button class="action-btn" style="background: #fef3c7; color: #92400e;" onclick="banUser('${user.id}')" title="حظر">
+                                🔒 حظر
+                            </button>`
+                        }
+                        <button class="action-btn" style="background: #fee2e2; color: #991b1b;" onclick="deleteUser('${user.id}')" title="حذف نهائي">
+                            🗑️ حذف
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+// 11. تحديث الإحصائيات
+function updateStats(total, active, banned, today) {
+    document.getElementById('totalUsers').textContent = total;
+    document.getElementById('activeUsers').textContent = active;
+    document.getElementById('bannedUsers').textContent = banned;
+    document.getElementById('todayUsers').textContent = today;
+}
+
+// 12. البحث والفلترة
+function filterUsers() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('filterStatus').value;
+    const genderFilter = document.getElementById('filterGender').value;
+    const dateFrom = document.getElementById('filterDateFrom').value;
+    const dateTo = document.getElementById('filterDateTo').value;
+    const minBalance = parseFloat(document.getElementById('filterMinBalance').value) || 0;
+    
+    if (!search && !statusFilter && !genderFilter && !dateFrom && !dateTo && minBalance === 0) {
+        displayUsers(allUsers);
+        return;
+    }
+    
+    const filtered = allUsers.filter(user => {
+        // البحث العام
+        let matchesSearch = true;
+        if (search) {
+            matchesSearch = (user.username && user.username.toLowerCase().includes(search)) ||
+                           (user.nickname && user.nickname.toLowerCase().includes(search)) ||
+                           (user.email && user.email.toLowerCase().includes(search)) ||
+                           (user.phone && user.phone.includes(search)) ||
+                           (user.numericId && user.numericId.toString().includes(search));
+        }
+        
+        // فلتر الحالة
+        let matchesStatus = true;
+        if (statusFilter === 'active') {
+            matchesStatus = !user.isBanned;
+        } else if (statusFilter === 'banned') {
+            matchesStatus = user.isBanned === true;
+        }
+        
+        // فلتر الجنس
+        let matchesGender = true;
+        if (genderFilter) {
+            matchesGender = user.gender === genderFilter;
+        }
+        
+        // فلتر التاريخ
+        let matchesDate = true;
+        if (dateFrom || dateTo) {
+            if (user.createdAt) {
+                const userDate = new Date(user.createdAt);
+                const fromDate = dateFrom ? new Date(dateFrom) : null;
+                const toDate = dateTo ? new Date(dateTo + 'T23:59:59') : null;
+                
+                if (fromDate && userDate < fromDate) matchesDate = false;
+                if (toDate && userDate > toDate) matchesDate = false;
+            } else {
+                matchesDate = false;
+            }
+        }
+        
+        // فلتر الرصيد
+        let matchesBalance = true;
+        if (minBalance > 0) {
+            matchesBalance = (user.balanceEGP >= minBalance) || (user.balanceUSD >= minBalance);
+        }
+        
+        return matchesSearch && matchesStatus && matchesGender && matchesDate && matchesBalance;
+    });
+    
+    displayUsers(filtered);
+}
+
+// 13. إعادة تعيين الفلاتر
+function resetFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('filterStatus').value = '';
+    document.getElementById('filterGender').value = '';
+    document.getElementById('filterDateFrom').value = '';
+    document.getElementById('filterDateTo').value = '';
+    document.getElementById('filterMinBalance').value = '';
+    displayUsers(allUsers);
+}
+
+// 14. إظهار/إخفاء المودال
+function showAddModal() {
+    document.getElementById('addModal').style.display = 'flex';
+    // إعادة تعيين الحقول
+    document.getElementById('addUsername').value = '';
+    document.getElementById('addPassword').value = '';
+    document.getElementById('addNickname').value = '';
+    document.getElementById('addEmail').value = '';
+    document.getElementById('addEmail2').value = '';
+    document.getElementById('addPhone').value = '';
+    document.getElementById('addPhone2').value = '';
+    document.getElementById('addGender').value = '';
+    document.getElementById('addAge').value = '';
+    document.getElementById('addCountry').value = '';
+    document.getElementById('addBio').value = '';
+    document.getElementById('addBalanceEGP').value = '0';
+    document.getElementById('addBalanceUSD').value = '0';
+}
+
+function hideAddModal() {
+    document.getElementById('addModal').style.display = 'none';
+}
+
+function showEditModal() {
+    document.getElementById('editModal').style.display = 'flex';
+}
+
+function hideEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+    currentEditingUser = null;
+}
+
+function showBalanceUpdateModal() {
+    document.getElementById('balanceUpdateModal').style.display = 'flex';
+}
+
+function hideBalanceUpdateModal() {
+    document.getElementById('balanceUpdateModal').style.display = 'none';
+}
+
+function showBulkActionsModal() {
+    document.getElementById('bulkActionsModal').style.display = 'flex';
+    // إعادة تعيين الحقول
+    document.getElementById('bulkActionType').value = 'ban';
+    document.getElementById('bulkBanReason').value = '';
+    document.getElementById('bulkBanDays').value = '7';
+    document.getElementById('bulkNotificationTitle').value = '';
+    document.getElementById('bulkNotificationContent').value = '';
+    updateBulkActionFields();
+}
+
+function hideBulkActionsModal() {
+    document.getElementById('bulkActionsModal').style.display = 'none';
+}
+
+// 15. تحديث حقول الإجراءات الجماعية
+function updateBulkActionFields() {
+    const actionType = document.getElementById('bulkActionType').value;
+    const banReasonSection = document.getElementById('banReasonSection');
+    const notificationSection = document.getElementById('notificationSection');
+    
+    if (actionType === 'ban') {
+        banReasonSection.style.display = 'block';
+        notificationSection.style.display = 'none';
+    } else if (actionType === 'send_notification') {
+        banReasonSection.style.display = 'none';
+        notificationSection.style.display = 'block';
+    } else {
+        banReasonSection.style.display = 'none';
+        notificationSection.style.display = 'none';
+    }
+}
+
+// 16. إضافة مستخدم
+async function addUser() {
+    const username = document.getElementById('addUsername').value.trim();
+    const password = document.getElementById('addPassword').value.trim();
+    const nickname = document.getElementById('addNickname').value.trim();
+    const email = document.getElementById('addEmail').value.trim();
+    const email2 = document.getElementById('addEmail2').value.trim();
+    const phone = document.getElementById('addPhone').value.trim();
+    const phone2 = document.getElementById('addPhone2').value.trim();
+    const gender = document.getElementById('addGender').value;
+    const age = document.getElementById('addAge').value;
+    const country = document.getElementById('addCountry').value.trim();
+    const bio = document.getElementById('addBio').value.trim();
+    const balanceEGP = parseFloat(document.getElementById('addBalanceEGP').value) || 0;
+    const balanceUSD = parseFloat(document.getElementById('addBalanceUSD').value) || 0;
+    
+    if (!username || !password) {
+        showAlert('⚠️ يرجى إدخال اسم المستخدم وكلمة المرور', 'error');
+        return;
+    }
+    
+    try {
+        // 🔧 إنشاء numericId (مطابق لصفحة الدخول)
+        const numericId = generateNumericId();
+        const newUserRef = database.ref('users').push();
+        
+        await newUserRef.set({
+            numericId: numericId,
+            username: username,
+            password: password,
+            nickname: nickname || username,
+            email: email || '',
+            email2: email2 || '',
+            phone: phone || '',
+            phone2: phone2 || '',
+            gender: gender || '',
+            age: age || '',
+            country: country || '',
+            bio: bio || '',
+            isBanned: false,
+            banExpiry: "",
+            banReason: "",
+            balanceEGP: balanceEGP,
+            balanceUSD: balanceUSD,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        });
+        
+        showAlert(`✅ تم إضافة المستخدم بنجاح (ID: ${numericId})`, 'success');
+        hideAddModal();
+        
+    } catch (error) {
+        showAlert('❌ خطأ: ' + error.message, 'error');
+    }
+}
+
+// 17. فتح مودال التعديل
+async function openEditModal(userId) {
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
+    
+    currentEditingUser = user;
+    
+    document.getElementById('editUserId').value = user.id;
+    document.getElementById('editUsername').value = user.username || '';
+    document.getElementById('editNickname').value = user.nickname || '';
+    document.getElementById('editPassword').value = user.password || '';
+    document.getElementById('editEmail').value = user.email || '';
+    document.getElementById('editEmail2').value = user.email2 || '';
+    document.getElementById('editPhone').value = user.phone || '';
+    document.getElementById('editPhone2').value = user.phone2 || '';
+    document.getElementById('editGender').value = user.gender || '';
+    document.getElementById('editAge').value = user.age || '';
+    document.getElementById('editCountry').value = user.country || '';
+    document.getElementById('editBio').value = user.bio || '';
+    document.getElementById('editBalanceEGP').value = user.balanceEGP || 0;
+    document.getElementById('editBalanceUSD').value = user.balanceUSD || 0;
+    
+    showEditModal();
+}
+
+// 18. تعديل المستخدم
+async function updateUser() {
+    if (!currentEditingUser) return;
+    
+    const userId = document.getElementById('editUserId').value;
+    const username = document.getElementById('editUsername').value.trim();
+    const nickname = document.getElementById('editNickname').value.trim();
+    const password = document.getElementById('editPassword').value.trim();
+    const email = document.getElementById('editEmail').value.trim();
+    const email2 = document.getElementById('editEmail2').value.trim();
+    const phone = document.getElementById('editPhone').value.trim();
+    const phone2 = document.getElementById('editPhone2').value.trim();
+    const gender = document.getElementById('editGender').value;
+    const age = document.getElementById('editAge').value;
+    const country = document.getElementById('editCountry').value.trim();
+    const bio = document.getElementById('editBio').value.trim();
+    const balanceEGP = parseFloat(document.getElementById('editBalanceEGP').value) || 0;
+    const balanceUSD = parseFloat(document.getElementById('editBalanceUSD').value) || 0;
+    
+    if (!username) {
+        showAlert('⚠️ يرجى إدخال اسم المستخدم', 'error');
+        return;
+    }
+    
+    try {
+        const updates = {
+            username: username,
+            nickname: nickname || username,
+            email: email || '',
+            email2: email2 || '',
+            phone: phone || '',
+            phone2: phone2 || '',
+            gender: gender || '',
+            age: age || '',
+            country: country || '',
+            bio: bio || '',
+            balanceEGP: balanceEGP,
+            balanceUSD: balanceUSD,
+            updatedAt: new Date().toISOString()
+        };
+        
+        // إذا تم إدخال كلمة مرور جديدة
+        if (password) {
+            updates.password = password;
+        }
+        
+        // إذا تم تغيير الاسم المستعار، تحديث تاريخ التغيير
+        if (nickname !== (currentEditingUser.nickname || currentEditingUser.username)) {
+            updates.lastNicknameChange = new Date().toISOString();
+        }
+        
+        // 🔧 التأكد من أن numericId محفوظ
+        updates.numericId = currentEditingUser.numericId;
+        
+        await database.ref('users/' + userId).update(updates);
+        
+        showAlert('✅ تم تحديث بيانات المستخدم بنجاح', 'success');
+        hideEditModal();
+        loadUsers();
+        
+    } catch (error) {
+        showAlert('❌ خطأ في التحديث: ' + error.message, 'error');
+    }
+}
+
+// 19. إضافة رصيد
+function addToBalance(currency) {
+    if (!currentEditingUser) return;
+    
+    const amount = prompt(`أدخل المبلغ المراد إضافته (${currency}):`, '0');
+    if (amount === null || isNaN(parseFloat(amount))) return;
+    
+    const numericAmount = parseFloat(amount);
+    const currentBalance = parseFloat(document.getElementById(`editBalance${currency}`).value) || 0;
+    
+    document.getElementById(`editBalance${currency}`).value = (currentBalance + numericAmount).toFixed(2);
+    
+    showAlert(`✅ تم إضافة ${numericAmount} ${currency} إلى الرصيد`, 'success');
+}
+
+// 20. حظر مستخدم
+async function banUser(userId) {
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
+    
+    const reason = prompt('سبب الحظر:');
+    if (!reason) return;
+    
+    const days = prompt('عدد أيام الحظر (0 للدائم):', '7');
+    let expiry;
+    
+    if (days === '0') {
+        expiry = 'permanent';
+    } else {
+        const daysNum = parseInt(days) || 7;
+        expiry = new Date(Date.now() + daysNum * 86400000).toISOString();
+    }
+    
+    try {
+        await database.ref('users/' + userId).update({
+            isBanned: true,
+            banReason: reason,
+            banExpiry: expiry,
+            bannedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        });
+        
+        showAlert('✅ تم حظر المستخدم', 'success');
+        loadUsers();
+        
+    } catch (error) {
+        showAlert('❌ خطأ: ' + error.message, 'error');
+    }
+}
+
+// 21. فك حظر
+async function unbanUser(userId) {
+    if (!confirm('فك حظر هذا المستخدم؟')) return;
+    
+    try {
+        await database.ref('users/' + userId).update({
+            isBanned: false,
+            banReason: '',
+            banExpiry: '',
+            updatedAt: new Date().toISOString()
+        });
+        
+        showAlert('✅ تم فك الحظر', 'success');
+        loadUsers();
+        
+    } catch (error) {
+        showAlert('❌ خطأ: ' + error.message, 'error');
+    }
+}
+
+// 22. حذف مستخدم مع إمكانية الاستعادة
+async function deleteUser(userId) {
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
+    
+    const deleteType = prompt(`نوع الحذف للمستخدم ${user.username}:\n\n1. حذف نهائي (لا يمكن استعادته)\n2. حذف مؤقت (يمكن استعادته)\n\nأدخل 1 أو 2:`, '2');
+    
+    if (!deleteType) return;
+    
+    if (deleteType === '1') {
+        // حذف نهائي
+        if (!confirm(`هل أنت متأكد من حذف المستخدم ${user.username} (ID: ${user.numericId}) نهائياً؟\n\n⚠️ هذا الإجراء لا يمكن التراجع عنه!`)) return;
+        
+        try {
+            // حفظ المعلومات قبل الحذف النهائي
+            await database.ref('permanent_deleted_users').push({
+                numericId: user.numericId,
+                username: user.username,
+                email: user.email,
+                phone: user.phone,
+                balanceEGP: user.balanceEGP,
+                balanceUSD: user.balanceUSD,
+                deletedAt: new Date().toISOString(),
+                deletedBy: 'admin',
+                originalFirebaseKey: userId,
+                reason: 'حذف نهائي'
+            });
+            
+            // حذف المستخدم
+            await database.ref('users/' + userId).remove();
+            
+            showAlert(`✅ تم حذف المستخدم ${user.username} نهائياً`, 'success');
+            loadUsers();
+            
+        } catch (error) {
+            showAlert('❌ خطأ: ' + error.message, 'error');
+        }
+    } else if (deleteType === '2') {
+        // حذف مؤقت (يمكن استعادته)
+        const reason = prompt('سبب الحذف (اختياري):');
+        
+        try {
+            // حفظ المعلومات في جدول المحذوفين المؤقت
+            await database.ref('deleted_users').push({
+                numericId: user.numericId,
+                username: user.username,
+                email: user.email,
+                email2: user.email2,
+                phone: user.phone,
+                phone2: user.phone2,
+                gender: user.gender,
+                age: user.age,
+                country: user.country,
+                bio: user.bio,
+                balanceEGP: user.balanceEGP,
+                balanceUSD: user.balanceUSD,
+                isBanned: user.isBanned,
+                banReason: user.banReason,
+                banExpiry: user.banExpiry,
+                deletedAt: new Date().toISOString(),
+                deletedBy: 'admin',
+                originalFirebaseKey: userId,
+                reason: reason || 'حذف مؤقت'
+            });
+            
+            // حذف المستخدم من المستخدمين النشطين
+            await database.ref('users/' + userId).remove();
+            
+            showAlert(`✅ تم حذف المستخدم ${user.username} مؤقتاً (يمكن استعادته)`, 'success');
+            loadUsers();
+            
+        } catch (error) {
+            showAlert('❌ خطأ في حذف الحساب: ' + error.message, 'error');
+        }
+    }
+}
+
+// ============ قسم المستخدمين المحذوفين ============
+
+// 23. عرض قسم المستخدمين المحذوفين
+function showDeletedUsersSection() {
+    const deletedSection = document.getElementById('deletedUsersSection');
+    const usersTable = document.querySelector('.table-container');
+    
+    // تبديل العرض
+    if (deletedSection.style.display === 'none') {
+        deletedSection.style.display = 'block';
+        usersTable.style.display = 'none';
+        loadDeletedUsers();
+    } else {
+        deletedSection.style.display = 'none';
+        usersTable.style.display = 'block';
+    }
+}
+
+// 24. تحميل المستخدمين المحذوفين
+async function loadDeletedUsers() {
+    const deletedBody = document.getElementById('deletedUsersBody');
+    
+    if (!database) {
+        deletedBody.innerHTML = '<tr><td colspan="7">❌ Firebase غير متصل</td></tr>';
+        return;
+    }
+    
+    try {
+        const snapshot = await database.ref('deleted_users').once('value');
+        
+        if (!snapshot.exists()) {
+            deletedBody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🗑️</div>
+                        <h4 style="color: #666;">لا يوجد مستخدمين محذوفين مؤقتاً</h4>
+                        <p style="color: #999; margin-top: 10px;">جميع الحسابات المحذوفة مؤقتاً ستظهر هنا</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        let html = '';
+        const deletedData = snapshot.val();
+        
+        for (const deletedId in deletedData) {
+            const user = deletedData[deletedId];
+            
+            let dateDisplay = '---';
+            if (user.deletedAt) {
+                try {
+                    dateDisplay = new Date(user.deletedAt).toLocaleString('ar-EG');
+                } catch (e) {
+                    dateDisplay = user.deletedAt;
+                }
+            }
+            
+            let deleteType = 'مؤقت';
+            let typeClass = 'status-temporary';
+            
+            if (user.reason && user.reason.includes('حذف نهائي')) {
+                deleteType = 'نهائي';
+                typeClass = 'status-permanent';
+            }
+            
+            html += `
+                <tr>
+                    <td>
+                        <div style="font-family: monospace; font-size: 12px; background: #f1f5f9; padding: 5px; border-radius: 5px;">
+                            ${user.numericId || '---'}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-weight: bold;">${user.username || '---'}</div>
+                    </td>
+                    <td>
+                        <div>📱 ${user.phone || '---'}</div>
+                        <div>📧 ${user.email || '---'}</div>
+                    </td>
+                    <td>
+                        <div style="font-size: 11px;">${dateDisplay}</div>
+                    </td>
+                    <td>
+                        <div style="font-size: 11px; color: #666;">${user.reason || '---'}</div>
+                    </td>
+                    <td>
+                        <div class="deleted-status ${typeClass}">${deleteType}</div>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 5px; justify-content: center;">
+                            <button class="action-btn" style="background: #10b981; color: white;" onclick="restoreUser('${deletedId}', ${user.numericId})" title="استعادة المستخدم">
+                                🔄 استعادة
+                            </button>
+                            <button class="action-btn" style="background: #ef4444; color: white;" onclick="permanentDelete('${deletedId}', '${user.username}')" title="حذف نهائي">
+                                🗑️ حذف نهائي
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+        
+        deletedBody.innerHTML = html;
+        
+    } catch (error) {
+        deletedBody.innerHTML = `<tr><td colspan="7">❌ خطأ: ${error.message}</td></tr>`;
+        showAlert('❌ خطأ في تحميل المستخدمين المحذوفين: ' + error.message, 'error');
+    }
+}
+
+// 25. استعادة مستخدم محذوف
+async function restoreUser(deletedId, numericId) {
+    if (!confirm('هل تريد استعادة هذا المستخدم؟')) return;
+    
+    try {
+        // جلب بيانات المستخدم المحذوف
+        const snapshot = await database.ref('deleted_users/' + deletedId).once('value');
+        const deletedUser = snapshot.val();
+        
+        if (!deletedUser) {
+            showAlert('❌ لم يتم العثور على بيانات المستخدم', 'error');
+            return;
+        }
+        
+        // إنشاء مستخدم جديد بنفس البيانات
+        const newUserRef = database.ref('users').push();
+        
+        await newUserRef.set({
+            numericId: numericId,
+            username: deletedUser.username,
+            password: deletedUser.password || '123456',
+            nickname: deletedUser.nickname || deletedUser.username,
+            email: deletedUser.email || '',
+            email2: deletedUser.email2 || '',
+            phone: deletedUser.phone || '',
+            phone2: deletedUser.phone2 || '',
+            gender: deletedUser.gender || '',
+            age: deletedUser.age || '',
+            country: deletedUser.country || '',
+            bio: deletedUser.bio || '',
+            balanceEGP: deletedUser.balanceEGP || 0,
+            balanceUSD: deletedUser.balanceUSD || 0,
+            isBanned: deletedUser.isBanned || false,
+            banReason: deletedUser.banReason || '',
+            banExpiry: deletedUser.banExpiry || '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        });
+        
+        // حذف من جدول المحذوفين المؤقت
+        await database.ref('deleted_users/' + deletedId).remove();
+        
+        showAlert(`✅ تم استعادة المستخدم ${deletedUser.username} بنجاح`, 'success');
+        
+        // إعادة تحميل القوائم
+        loadDeletedUsers();
+        loadUsers();
+        
+        // العودة للجدول الرئيسي
+        setTimeout(() => {
+            showDeletedUsersSection();
+        }, 1000);
+        
+    } catch (error) {
+        showAlert('❌ خطأ في استعادة المستخدم: ' + error.message, 'error');
+    }
+}
+
+// 26. حذف نهائي من جدول المحذوفين المؤقت
+async function permanentDelete(deletedId, username) {
+    if (!confirm(`هل تريد حذف المستخدم ${username} نهائياً من قاعدة البيانات؟\n\n⚠️ هذا الإجراء لا يمكن التراجع عنه!`)) return;
+    
+    try {
+        // نقل إلى جدول الحذف النهائي
+        const snapshot = await database.ref('deleted_users/' + deletedId).once('value');
+        const deletedUser = snapshot.val();
+        
+        if (deletedUser) {
+            await database.ref('permanent_deleted_users').push({
+                ...deletedUser,
+                permanentlyDeletedAt: new Date().toISOString(),
+                permanentlyDeletedBy: 'admin'
+            });
+        }
+        
+        // حذف نهائي
+        await database.ref('deleted_users/' + deletedId).remove();
+        
+        showAlert(`✅ تم حذف المستخدم ${username} نهائياً`, 'success');
+        loadDeletedUsers();
+        
+    } catch (error) {
+        showAlert('❌ خطأ في الحذف النهائي: ' + error.message, 'error');
+    }
+}
+
+// 27. تحديث الأرصدة الجماعي
+async function applyBulkBalanceUpdate() {
+    const currency = document.getElementById('bulkCurrency').value;
+    const operation = document.getElementById('bulkOperation').value;
+    const amount = parseFloat(document.getElementById('bulkAmount').value);
+    const reason = document.getElementById('bulkReason').value.trim();
+    
+    if (isNaN(amount) || amount <= 0) {
+        showAlert('⚠️ يرجى إدخال مبلغ صحيح', 'error');
+        return;
+    }
+    
+    if (!confirm(`هل أنت متأكد من تطبيق تحديث الرصيد على جميع المستخدمين الظاهرين؟`)) {
+        return;
+    }
+    
+    try {
+        // الحصول على المستخدمين المراد تحديثهم
+        const visibleUsers = getFilteredUsers();
+        
+        let count = 0;
+        for (const user of visibleUsers) {
+            const currentBalance = parseFloat(user[`balance${currency}`]) || 0;
+            let newBalance;
+            
+            switch (operation) {
+                case 'add':
+                    newBalance = currentBalance + amount;
+                    break;
+                case 'subtract':
+                    newBalance = currentBalance - amount;
+                    break;
+                case 'set':
+                    newBalance = amount;
+                    break;
+                default:
+                    newBalance = currentBalance;
+            }
+            
+            // التأكد من أن الرصيد لا يصبح سالباً
+            if (newBalance < 0) newBalance = 0;
+            
+            await database.ref('users/' + user.id).update({
+                [`balance${currency}`]: newBalance,
+                updatedAt: new Date().toISOString()
+            });
+            
+            count++;
+        }
+        
+        showAlert(`✅ تم تحديث أرصدة ${count} مستخدم بنجاح`, 'success');
+        hideBalanceUpdateModal();
+        loadUsers();
+        
+    } catch (error) {
+        showAlert('❌ خطأ في تحديث الأرصدة: ' + error.message, 'error');
+    }
+}
+
+// 28. الإجراءات الجماعية
+async function applyBulkAction() {
+    const actionType = document.getElementById('bulkActionType').value;
+    
+    if (!confirm(`هل أنت متأكد من تطبيق هذا الإجراء على جميع المستخدمين الظاهرين؟`)) {
+        return;
+    }
+    
+    try {
+        const visibleUsers = getFilteredUsers();
+        let count = 0;
+        
+        switch (actionType) {
+            case 'ban':
+                const banReason = document.getElementById('bulkBanReason').value.trim();
+                const banDays = parseInt(document.getElementById('bulkBanDays').value) || 7;
+                let banExpiry;
+                
+                if (banDays === 0) {
+                    banExpiry = 'permanent';
+                } else {
+                    banExpiry = new Date(Date.now() + banDays * 86400000).toISOString();
+                }
+                
+                for (const user of visibleUsers) {
+                    if (!user.isBanned) {
+                        await database.ref('users/' + user.id).update({
+                            isBanned: true,
+                            banReason: banReason,
+                            banExpiry: banExpiry,
+                            bannedAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        });
+                        count++;
+                    }
+                }
+                break;
+                
+            case 'unban':
+                for (const user of visibleUsers) {
+                    if (user.isBanned) {
+                        await database.ref('users/' + user.id).update({
+                            isBanned: false,
+                            banReason: '',
+                            banExpiry: '',
+                            updatedAt: new Date().toISOString()
+                        });
+                        count++;
+                    }
+                }
+                break;
+                
+            case 'delete_temp':
+                const deleteReason = prompt('سبب الحذف المؤقت:') || 'حذف جماعي';
+                
+                for (const user of visibleUsers) {
+                    // حفظ في جدول المحذوفين
+                    await database.ref('deleted_users').push({
+                        numericId: user.numericId,
+                        username: user.username,
+                        email: user.email,
+                        phone: user.phone,
+                        balanceEGP: user.balanceEGP,
+                        balanceUSD: user.balanceUSD,
+                        deletedAt: new Date().toISOString(),
+                        deletedBy: 'admin',
+                        originalFirebaseKey: user.id,
+                        reason: deleteReason
+                    });
+                    
+                    // حذف من المستخدمين
+                    await database.ref('users/' + user.id).remove();
+                    count++;
+                }
+                break;
+                
+            case 'send_notification':
+                const title = document.getElementById('bulkNotificationTitle').value.trim();
+                const content = document.getElementById('bulkNotificationContent').value.trim();
+                
+                if (!title || !content) {
+                    showAlert('⚠️ يرجى إدخال عنوان ومحتوى الإشعار', 'error');
+                    return;
+                }
+                
+                for (const user of visibleUsers) {
+                    await database.ref('notifications/' + user.id).push({
+                        title: title,
+                        content: content,
+                        sentAt: new Date().toISOString(),
+                        read: false
+                    });
+                    count++;
+                }
+                break;
+        }
+        
+        showAlert(`✅ تم تطبيق الإجراء على ${count} مستخدم بنجاح`, 'success');
+        hideBulkActionsModal();
+        loadUsers();
+        
+    } catch (error) {
+        showAlert('❌ خطأ في تطبيق الإجراء الجماعي: ' + error.message, 'error');
+    }
+}
+
+// 29. الحصول على المستخدمين بعد الفلترة
+function getFilteredUsers() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('filterStatus').value;
+    const genderFilter = document.getElementById('filterGender').value;
+    const dateFrom = document.getElementById('filterDateFrom').value;
+    const dateTo = document.getElementById('filterDateTo').value;
+    const minBalance = parseFloat(document.getElementById('filterMinBalance').value) || 0;
+    
+    return allUsers.filter(user => {
+        // البحث العام
+        let matchesSearch = true;
+        if (search) {
+            matchesSearch = (user.username && user.username.toLowerCase().includes(search)) ||
+                           (user.nickname && user.nickname.toLowerCase().includes(search)) ||
+                           (user.email && user.email.toLowerCase().includes(search)) ||
+                           (user.phone && user.phone.includes(search)) ||
+                           (user.numericId && user.numericId.toString().includes(search));
+        }
+        
+        // فلتر الحالة
+        let matchesStatus = true;
+        if (statusFilter === 'active') {
+            matchesStatus = !user.isBanned;
+        } else if (statusFilter === 'banned') {
+            matchesStatus = user.isBanned === true;
+        }
+        
+        // فلتر الجنس
+        let matchesGender = true;
+        if (genderFilter) {
+            matchesGender = user.gender === genderFilter;
+        }
+        
+        // فلتر التاريخ
+        let matchesDate = true;
+        if (dateFrom || dateTo) {
+            if (user.createdAt) {
+                const userDate = new Date(user.createdAt);
+                const fromDate = dateFrom ? new Date(dateFrom) : null;
+                const toDate = dateTo ? new Date(dateTo + 'T23:59:59') : null;
+                
+                if (fromDate && userDate < fromDate) matchesDate = false;
+                if (toDate && userDate > toDate) matchesDate = false;
+            } else {
+                matchesDate = false;
+            }
+        }
+        
+        // فلتر الرصيد
+        let matchesBalance = true;
+        if (minBalance > 0) {
+            matchesBalance = (user.balanceEGP >= minBalance) || (user.balanceUSD >= minBalance);
+        }
+        
+        return matchesSearch && matchesStatus && matchesGender && matchesDate && matchesBalance;
+    });
+}
+
+// 30. تصدير البيانات
+function exportUsersData() {
+    const data = allUsers.map(user => ({
+        'المعرف': user.numericId,
+        'اسم المستخدم': user.username,
+        'الاسم المستعار': user.nickname,
+        'البريد الإلكتروني': user.email,
+        'البريد الإلكتروني الإضافي': user.email2,
+        'رقم الهاتف': user.phone,
+        'رقم الهاتف الإضافي': user.phone2,
+        'الجنس': user.gender,
+        'العمر': user.age,
+        'البلد': user.country,
+        'الرصيد (EGP)': user.balanceEGP,
+        'الرصيد (USD)': user.balanceUSD,
+        'الحالة': user.isBanned ? 'محظور' : 'نشط',
+        'سبب الحظر': user.banReason,
+        'تاريخ التسجيل': user.createdAt,
+        'آخر تحديث': user.updatedAt
+    }));
+    
+    // تحويل إلى CSV
+    const headers = Object.keys(data[0] || {});
+    const csv = [
+        headers.join(','),
+        ...data.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
+    ].join('\n');
+    
+    // إنشاء رابط للتحميل
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `users_export_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    
+    showAlert('✅ تم تصدير البيانات بنجاح', 'success');
+}
+
+// 31. عرض تقرير النشاط
+function showUserActivityReport() {
+    const today = new Date();
+    const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const lastMonth = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+    
+    const usersThisWeek = allUsers.filter(u => {
+        if (!u.createdAt) return false;
+        const userDate = new Date(u.createdAt);
+        return userDate >= lastWeek;
+    }).length;
+    
+    const usersThisMonth = allUsers.filter(u => {
+        if (!u.createdAt) return false;
+        const userDate = new Date(u.createdAt);
+        return userDate >= lastMonth;
+    }).length;
+    
+    const activeUsersCount = allUsers.filter(u => !u.isBanned).length;
+    const bannedUsersCount = allUsers.filter(u => u.isBanned).length;
+    
+    const totalBalanceEGP = allUsers.reduce((sum, u) => sum + (u.balanceEGP || 0), 0);
+    const totalBalanceUSD = allUsers.reduce((sum, u) => sum + (u.balanceUSD || 0), 0);
+    
+    const report = `
+        📊 تقرير نشاط النظام
+        ====================
+        👥 إجمالي المستخدمين: ${allUsers.length}
+        ✅ المستخدمين النشطين: ${activeUsersCount}
+        🚫 المستخدمين المحظورين: ${bannedUsersCount}
+        
+        📈 التسجيلات:
+        • هذا الأسبوع: ${usersThisWeek}
+        • هذا الشهر: ${usersThisMonth}
+        
+        💰 إجمالي الأرصدة:
+        • EGP: ${totalBalanceEGP.toFixed(2)}
+        • USD: ${totalBalanceUSD.toFixed(2)}
+        
+        ⏱️ آخر تحديث: ${lastUpdateTime ? lastUpdateTime.toLocaleString('ar-EG') : '---'}
+    `;
+    
+    alert(report);
+}
+
+// 32. تبديل معلومات الاتصال
+function toggleConnectionInfo() {
+    const infoDiv = document.getElementById('connectionInfo');
+    infoDiv.style.display = infoDiv.style.display === 'none' ? 'block' : 'none';
+}
+
+// 33. عرض الرسائل
+function showAlert(message, type) {
+    const container = document.getElementById('alertContainer');
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type}`;
+    alertDiv.innerHTML = `
+        <span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+        <div style="flex: 1;">${message}</div>
+        <button onclick="this.parentElement.remove()" style="background: none; border: none; color: inherit; cursor: pointer; font-size: 16px;">×</button>
+    `;
+    
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    setTimeout(() => {
+        if (alertDiv.parentElement) {
+            alertDiv.remove();
+        }
+    }, 10000);
+}
+
+// 34. الذهاب للصفحة الرئيسية
+function goToHome() {
+    window.location.href = 'home.html';
+}
+
+// 35. التهيئة عند تحميل الصفحة
+window.onload = function() {
+    initializeFirebase();
+    
+    // تحديث البيانات كل 30 ثانية
+    setInterval(loadUsers, 30000);
+    
+    // إضافة مستمع لتحديث حقول الإجراءات الجماعية
+    document.getElementById('bulkActionType').addEventListener('change', updateBulkActionFields);
+};
+
+// للاختبار
+window.testApp = function() {
+    console.log('Firebase connected:', !!database);
+    console.log('Users count:', allUsers.length);
+    
+    // إضافة مستخدم تجريبي للاختبار
+    if (database) {
+        const testRef = database.ref('users').push();
+        const numericId = generateNumericId();
+        testRef.set({
+            numericId: numericId,
+            username: 'test_' + Date.now().toString().slice(-6),
+            password: 'test123',
+            nickname: 'مستخدم تجريبي',
+            email: 'test@example.com',
+            email2: 'test2@example.com',
+            phone: '010' + Math.floor(10000000 + Math.random() * 90000000),
+            phone2: '011' + Math.floor(10000000 + Math.random() * 90000000),
+            gender: Math.random() > 0.5 ? 'ذكر' : 'أنثى',
+            age: Math.floor(Math.random() * 50) + 18,
+            country: 'مصر',
+            bio: 'مستخدم تجريبي للاختبار',
+            balanceEGP: 1000,
+            balanceUSD: 50,
+            isBanned: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        }).then(() => console.log('✅ Test user added with ID:', numericId));
+    }
+};
+</script>
+</body>
+</html>
