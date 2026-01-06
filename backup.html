@@ -1029,6 +1029,7 @@ let allUsers = [];
 let currentEditingUser = null;
 let selectedUsers = [];
 let lastUpdateTime = null;
+let usersMap = new Map(); // خريطة لتتبع المستخدمين ومنع التكرار
 
 // دالة لإنشاء ID رقمي (مطابق للصفحة الرئيسية)
 function generateNumericId() {
@@ -1174,14 +1175,14 @@ function updateUserInTable(userId, userData) {
         `;
     }
     
-    // تحديث التواصل
+    // تحديث التواصل - إصلاح المشكلة هنا
     if (contactCell) {
-        contactCell.innerHTML = `
-            <div>📱 ${userData.phone || '---'}</div>
-            ${userData.phone2 ? `<div>📱 ${userData.phone2}</div>` : ''}
-            <div>📧 ${userData.email || '---'}</div>
-            ${userData.email2 ? `<div>📧 ${userData.email2}</div>` : ''}
-        `;
+        let phoneHtml = userData.phone ? `<div>📱 ${userData.phone}</div>` : '<div>📱 ---</div>';
+        let phone2Html = userData.phone2 ? `<div>📱 ${userData.phone2}</div>` : '';
+        let emailHtml = userData.email ? `<div>📧 ${userData.email}</div>` : '<div>📧 ---</div>';
+        let email2Html = userData.email2 ? `<div>📧 ${userData.email2}</div>` : '';
+        
+        contactCell.innerHTML = phoneHtml + phone2Html + emailHtml + email2Html;
     }
     
     // تحديث التاريخ
@@ -1192,6 +1193,8 @@ function updateUserInTable(userId, userData) {
             } catch (e) {
                 dateCell.textContent = userData.createdAt;
             }
+        } else {
+            dateCell.textContent = '---';
         }
     }
     
@@ -1256,7 +1259,7 @@ async function testConnection() {
     }
 }
 
-// 9. تحميل المستخدمين
+// 9. تحميل المستخدمين - إصلاح المشكلة الرئيسية هنا
 async function loadUsers() {
     const tbody = document.getElementById('tableBody');
     
@@ -1268,6 +1271,7 @@ async function loadUsers() {
     try {
         const snapshot = await database.ref('users').once('value');
         allUsers = [];
+        usersMap.clear(); // مسح الخريطة القديمة
         selectedUsers = [];
         let total = 0, active = 0, banned = 0, today = 0;
         const todayDate = new Date().toDateString();
@@ -1277,13 +1281,20 @@ async function loadUsers() {
             
             for (const userId in usersData) {
                 const userData = usersData[userId];
+                
+                // التحقق من وجود المستخدم مسبقاً لمنع التكرار
+                if (usersMap.has(userId)) {
+                    console.warn(`⚠️ تم تجاهل مستخدم مكرر: ${userId}`);
+                    continue;
+                }
+                
                 const user = {
                     id: userId,
                     firebaseKey: userId,
                     numericId: userData.numericId || generateNumericId(),
                     username: userData.username || '',
                     nickname: userData.nickname || '',
-                    password: userData.password || '',
+                    password: userData.password || '', // الحفاظ على كلمة المرور
                     email: userData.email || '',
                     email2: userData.email2 || '',
                     phone: userData.phone || '',
@@ -1301,6 +1312,9 @@ async function loadUsers() {
                     updatedAt: userData.updatedAt || '',
                     lastNicknameChange: userData.lastNicknameChange || ''
                 };
+                
+                // إضافة المستخدم إلى الخريطة لمنع التكرار
+                usersMap.set(userId, user);
                 
                 // 🔧 التأكد من أن numericId موجود وتحديثه إذا لم يكن
                 if (!userData.numericId) {
@@ -1329,13 +1343,15 @@ async function loadUsers() {
         lastUpdateTime = new Date();
         document.getElementById('lastUpdateTime').textContent = lastUpdateTime.toLocaleTimeString('ar-EG');
         
+        console.log(`✅ تم تحميل ${allUsers.length} مستخدم`);
+        
     } catch (error) {
         tbody.innerHTML = `<tr><td colspan="10">❌ خطأ: ${error.message}</td></tr>`;
         showAlert('❌ خطأ في التحميل: ' + error.message, 'error');
     }
 }
 
-// 10. عرض المستخدمين
+// 10. عرض المستخدمين - إصلاح المشكلة هنا
 function displayUsers(users) {
     const tbody = document.getElementById('tableBody');
     
@@ -1383,6 +1399,13 @@ function displayUsers(users) {
         let ageText = user.age ? `${user.age} سنة` : '';
         let countryText = user.country ? `📍 ${user.country}` : '';
         
+        // التواصل - إصلاح المشكلة هنا
+        let contactHtml = '';
+        contactHtml += user.phone ? `<div>📱 ${user.phone}</div>` : '<div>📱 ---</div>';
+        if (user.phone2) contactHtml += `<div>📱 ${user.phone2}</div>`;
+        contactHtml += user.email ? `<div>📧 ${user.email}</div>` : '<div>📧 ---</div>';
+        if (user.email2) contactHtml += `<div>📧 ${user.email2}</div>`;
+        
         html += `
             <tr class="${rowClass}" id="user-row-${user.id}">
                 <td>
@@ -1412,10 +1435,10 @@ function displayUsers(users) {
                 <td>
                     <div style="display: flex; flex-direction: column; gap: 5px; align-items: center;">
                         <span class="balance-cell balance-egp" title="الرصيد بالجنيه المصري">
-                            ${user.balanceEGP.toFixed(2)} EGP
+                            ${(user.balanceEGP || 0).toFixed(2)} EGP
                         </span>
                         <span class="balance-cell balance-usd" title="الرصيد بالدولار">
-                            ${user.balanceUSD.toFixed(2)} USD
+                            ${(user.balanceUSD || 0).toFixed(2)} USD
                         </span>
                     </div>
                 </td>
@@ -1424,10 +1447,7 @@ function displayUsers(users) {
                     ${banInfo}
                 </td>
                 <td>
-                    <div>📱 ${user.phone || '---'}</div>
-                    ${user.phone2 ? `<div>📱 ${user.phone2}</div>` : ''}
-                    <div>📧 ${user.email || '---'}</div>
-                    ${user.email2 ? `<div>📧 ${user.email2}</div>` : ''}
+                    ${contactHtml}
                 </td>
                 <td>${dateDisplay}</td>
                 <td>
@@ -1983,8 +2003,8 @@ async function loadDeletedUsers() {
                         <div style="font-weight: bold;">${user.username || '---'}</div>
                     </td>
                     <td>
-                        <div>📱 ${user.phone || '---'}</div>
-                        <div>📧 ${user.email || '---'}</div>
+                        ${user.phone ? `<div>📱 ${user.phone}</div>` : '<div>📱 ---</div>'}
+                        ${user.email ? `<div>📧 ${user.email}</div>` : '<div>📧 ---</div>'}
                     </td>
                     <td>
                         <div style="font-size: 11px;">${dateDisplay}</div>
@@ -2450,37 +2470,6 @@ window.onload = function() {
     
     // إضافة مستمع لتحديث حقول الإجراءات الجماعية
     document.getElementById('bulkActionType').addEventListener('change', updateBulkActionFields);
-};
-
-// للاختبار
-window.testApp = function() {
-    console.log('Firebase connected:', !!database);
-    console.log('Users count:', allUsers.length);
-    
-    // إضافة مستخدم تجريبي للاختبار
-    if (database) {
-        const testRef = database.ref('users').push();
-        const numericId = generateNumericId();
-        testRef.set({
-            numericId: numericId,
-            username: 'test_' + Date.now().toString().slice(-6),
-            password: 'test123',
-            nickname: 'مستخدم تجريبي',
-            email: 'test@example.com',
-            email2: 'test2@example.com',
-            phone: '010' + Math.floor(10000000 + Math.random() * 90000000),
-            phone2: '011' + Math.floor(10000000 + Math.random() * 90000000),
-            gender: Math.random() > 0.5 ? 'ذكر' : 'أنثى',
-            age: Math.floor(Math.random() * 50) + 18,
-            country: 'مصر',
-            bio: 'مستخدم تجريبي للاختبار',
-            balanceEGP: 1000,
-            balanceUSD: 50,
-            isBanned: false,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        }).then(() => console.log('✅ Test user added with ID:', numericId));
-    }
 };
 </script>
 </body>
